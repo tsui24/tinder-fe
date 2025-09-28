@@ -1,0 +1,62 @@
+import React from "react";
+import { Layout, Button, Space, Typography } from "antd";
+import { UserOutlined, LoginOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import "./Header.css";
+
+const { Header: AntHeader } = Layout;
+const { Title } = Typography;
+
+function Header() {
+  const navigate = useNavigate();
+
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
+  const handleRegister = () => {
+    // Handle register functionality - you can create a register route later
+    console.log("Register clicked");
+  };
+
+  const handleLogoClick = () => {
+    navigate("/");
+  };
+
+  return (
+    <AntHeader className="header">
+      <div className="header-content">
+        <div className="logo-section">
+          <Title level={2} className="app-logo" onClick={handleLogoClick}>
+            💕 TinderApp
+          </Title>
+        </div>
+
+        <div className="auth-buttons">
+          <Space size="middle">
+            <Button
+              type="default"
+              size="large"
+              icon={<LoginOutlined />}
+              onClick={handleLogin}
+              className="login-btn"
+            >
+              Login
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              icon={<UserOutlined />}
+              onClick={handleRegister}
+              className="register-btn"
+            >
+              Register
+            </Button>
+          </Space>
+        </div>
+      </div>
+    </AntHeader>
+  );
+}
+
+export default Header;
