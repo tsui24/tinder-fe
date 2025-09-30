@@ -15,8 +15,7 @@ function Header() {
   };
 
   const handleRegister = () => {
-    // Handle register functionality - you can create a register route later
-    console.log("Register clicked");
+    navigate("/register");
   };
 
   const handleLogoClick = () => {

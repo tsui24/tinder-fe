@@ -1,7 +1,7 @@
 import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { LandingPage } from "../pages";
-import { Login } from "../features";
+import { Login, Register } from "../features";
 import Layout from "../layouts/Layout";
 
 export const router = createBrowserRouter([
@@ -16,6 +16,10 @@ export const router = createBrowserRouter([
       {
         path: "login",
         element: <Login />,
+      },
+      {
+        path: "register",
+        element: <Register />,
       },
     ],
   },
