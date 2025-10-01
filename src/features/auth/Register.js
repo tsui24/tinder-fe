@@ -24,7 +24,7 @@ function Register() {
       //   const response = await authService.register(registerData);
       //   console.log("Registration successful:", response);
 
-      //   navigate("/login");
+      navigate("/register-info");
     } catch (error) {
       console.error("Registration failed:", error);
     }
