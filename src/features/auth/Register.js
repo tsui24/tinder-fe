@@ -21,10 +21,10 @@ function Register() {
       console.log("Register form submitted:", values);
       const { ...registerData } = values;
       console.log("Register data:", registerData);
-      //   const response = await authService.register(registerData);
-      //   console.log("Registration successful:", response);
+        const response = await authService.register(registerData);
+        console.log("Registration successful:", response);
 
-      navigate("/register-info");
+      navigate("/login");
     } catch (error) {
       console.error("Registration failed:", error);
     }

@@ -1,19 +1,30 @@
-import React from "react";
+import React, {useState} from "react";
 import authService from "../../api/authService";
 
 import { Form, Input, Button, Card, Typography, Space, Divider } from "antd";
 import { UserOutlined, LockOutlined, LoginOutlined } from "@ant-design/icons";
 import "./Login.css";
+import {useNavigate} from "react-router-dom";
 const { Title, Text, Link } = Typography;
 function Login() {
   const [form] = Form.useForm();
+  const navigate = useNavigate();
+  const [isCheck, setIsCheck] = useState(false);
 
   const onFinish = (values) => {
     console.log("Login form submitted:", values);
     authService
       .login(values)
-      .then((response) => {
+      .then(async (response) => {
         console.log("Login successful:", response.data);
+        localStorage.setItem("token", response?.data?.result.token);
+        const checkResponse = await checkUser();
+
+        if (checkResponse) {
+          navigate('/');
+        } else {
+          navigate('/register-info');
+        }
       })
       .catch((error) => {
         console.error("Login failed:", error);
@@ -22,6 +33,16 @@ function Login() {
 
   const onFinishFailed = (errorInfo) => {
     console.log("Login failed:", errorInfo);
+  };
+
+  const checkUser = async () => {
+    try {
+      const response = await authService.check_user();
+      console.log(response);
+      setIsCheck(response.data.result);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
