@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = 'https://txbkcfosweurilljggld.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4YmtjZm9zd2V1cmlsbGpnZ2xkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjUxMzgsImV4cCI6MjA3NDY0MTEzOH0.QCDl0VLRo0VjeZoz8btaXYMcefzpXF94Zow7xPxKDeM'; // Thay bằng anon key từ dashboard
-
+const supabaseUrl = "https://jgpbxuttuorkjaajguyg.supabase.co";
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpncGJ4dXR0dW9ya2phYWpndXlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0NDYwODEsImV4cCI6MjA3NjAyMjA4MX0.fhqMIQlFv6c0ETpgCIrfv7At_lhfmTf5jzuLzO0jN4k";
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

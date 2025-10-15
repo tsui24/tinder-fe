@@ -1,8 +1,9 @@
 import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { LandingPage } from "../pages";
-import { Login, Register, RegisterInfo } from "../features";
+import { Login, Register, RegisterInfo, Match } from "../features";
 import Layout from "../layouts/Layout";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
@@ -22,8 +23,40 @@ export const router = createBrowserRouter([
         element: <Register />,
       },
       {
+        path: "match",
+        element: (
+          <ProtectedRoute>
+            <Match />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "register-info",
-        element: <RegisterInfo />,
+        element: (
+          <ProtectedRoute>
+            <RegisterInfo />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "*",
+        element: (
+          <ProtectedRoute>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "50vh",
+                flexDirection: "column",
+                gap: "20px",
+              }}
+            >
+              <h2>404 - Page Not Found</h2>
+              <p>The page you're looking for doesn't exist.</p>
+            </div>
+          </ProtectedRoute>
+        ),
       },
     ],
   },

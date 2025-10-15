@@ -1,10 +1,14 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import authService from "../../api/authService";
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from "../../utils/notification";
 
 import { Form, Input, Button, Card, Typography, Space, Divider } from "antd";
 import { UserOutlined, LockOutlined, LoginOutlined } from "@ant-design/icons";
 import "./Login.css";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 const { Title, Text, Link } = Typography;
 function Login() {
   const [form] = Form.useForm();
@@ -16,18 +20,33 @@ function Login() {
     authService
       .login(values)
       .then(async (response) => {
-        console.log("Login successful:", response.data);
-        localStorage.setItem("token", response?.data?.result.token);
-        const checkResponse = await checkUser();
-
-        if (checkResponse) {
-          navigate('/');
+        if (response?.data?.code === 200) {
+          localStorage.setItem("token", response?.data?.result.token);
+          showSuccessNotification(
+            "Login Successful",
+            "Welcome back! Redirecting..."
+          );
+          const checkResponse = await checkUser();
+          if (checkResponse) {
+            navigate("/match");
+          } else {
+            navigate("/register-info");
+          }
         } else {
-          navigate('/register-info');
+          showErrorNotification(
+            "Login Failed",
+            response?.data?.message ||
+              "Invalid username or password. Please try again."
+          );
         }
       })
       .catch((error) => {
         console.error("Login failed:", error);
+        showErrorNotification(
+          "Login Failed",
+          error.response?.data?.message ||
+            "Invalid username or password. Please try again."
+        );
       });
   };
 
@@ -38,10 +57,13 @@ function Login() {
   const checkUser = async () => {
     try {
       const response = await authService.check_user();
-      console.log(response);
-      setIsCheck(response.data.result);
+      console.log("checkUser response:", response);
+      const userExists = response.data.result;
+      setIsCheck(userExists);
+      return userExists; // Return the boolean result
     } catch (error) {
-      console.log(error);
+      console.log("checkUser error:", error);
+      return false; // Return false if there's an error
     }
   };
 

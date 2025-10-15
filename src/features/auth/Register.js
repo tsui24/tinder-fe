@@ -8,6 +8,10 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import authService from "../../api/authService";
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from "../../utils/notification";
 import "./Register.css";
 
 const { Title, Text, Link } = Typography;
@@ -21,12 +25,21 @@ function Register() {
       console.log("Register form submitted:", values);
       const { ...registerData } = values;
       console.log("Register data:", registerData);
-        const response = await authService.register(registerData);
-        console.log("Registration successful:", response);
+      const response = await authService.register(registerData);
+      console.log("Registration successful:", response);
 
+      showSuccessNotification(
+        "Registration Successful",
+        "Your account has been created! Please login."
+      );
       navigate("/login");
     } catch (error) {
       console.error("Registration failed:", error);
+      showErrorNotification(
+        "Registration Failed",
+        error.response?.data?.message ||
+          "Something went wrong. Please try again."
+      );
     }
   };
 
