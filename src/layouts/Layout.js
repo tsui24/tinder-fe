@@ -7,9 +7,14 @@ const { Content } = AntLayout;
 
 function Layout() {
   const location = useLocation();
-  
+
   // Các trang không hiển thị header và footer
-  const hideHeaderFooter = ['/match', '/matches', '/messages', '/settings'].includes(location.pathname);
+  const hideHeaderFooter = [
+    "/match",
+    "/matches",
+    "/messages",
+    "/settings",
+  ].includes(location.pathname);
 
   return (
     <AntLayout style={{ minHeight: "100vh" }}>

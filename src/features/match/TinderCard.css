@@ -1,4 +1,4 @@
-/* Tinder Card Styles - Authentic Design */
+/* Tinder Card Styles - Vibrant Dating App Design */
 
 .tinder-card {
   position: relative;
@@ -7,17 +7,172 @@
   border-radius: 8px;
   overflow: hidden;
   background: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 4px 15px rgba(255, 68, 88, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   user-select: none;
   margin: 0 auto 20px auto;
+  transition: all 0.3s ease;
+}
+
+.tinder-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 68, 88, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Gradient Animation Keyframes */
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-text {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+/* Swipe Animation Keyframes */
+
+@keyframes swipeRight {
+  0% {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100vw) rotate(30deg);
+    opacity: 0;
+  }
+}
+
+@keyframes swipeLeft {
+  0% {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100vw) rotate(-30deg);
+    opacity: 0;
+  }
+}
+
+@keyframes swipeUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) scale(1.1);
+    opacity: 0;
+  }
+}
+
+@keyframes bounceBack {
+  0% {
+    transform: translateX(0) rotate(0deg);
+  }
+  50% {
+    transform: translateX(var(--drag-x, 0)) rotate(var(--drag-rotation, 0deg));
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+}
+
+/* Swipe States */
+
+.tinder-card.swiping {
+  transition: none;
+  transform: translateX(var(--drag-x, 0)) rotate(var(--drag-rotation, 0deg));
+  z-index: 1000;
+}
+
+.tinder-card.swipe-right {
+  animation: swipeRight 0.3s ease-out forwards;
+}
+
+.tinder-card.swipe-left {
+  animation: swipeLeft 0.3s ease-out forwards;
+}
+
+.tinder-card.swipe-up {
+  animation: swipeUp 0.4s ease-out forwards;
+}
+
+.tinder-card.bounce-back {
+  animation: bounceBack 0.3s ease-out;
 }
 
 /* Card Image Container */
+
 .tinder-card-image-container {
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+/* Swipe Overlay Effects */
+
+.swipe-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-20deg);
+  font-size: 64px;
+  font-weight: 900;
+  padding: 20px 40px;
+  border: 8px solid;
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  pointer-events: none;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.like-overlay {
+  color: #42c767;
+  border-color: #42c767;
+  background: rgba(66, 199, 103, 0.1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(66, 199, 103, 0.3);
+}
+
+.nope-overlay {
+  color: #ff4458;
+  border-color: #ff4458;
+  background: rgba(255, 68, 88, 0.1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(255, 68, 88, 0.3);
+}
+
+.super-like-overlay {
+  color: #4fc3f7;
+  border-color: #4fc3f7;
+  background: rgba(79, 195, 247, 0.1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(79, 195, 247, 0.3);
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+
+/* Show overlays based on swipe direction */
+
+.tinder-card.swiping.swipe-right-preview .like-overlay {
+  opacity: var(--swipe-opacity, 0);
+}
+
+.tinder-card.swiping.swipe-left-preview .nope-overlay {
+  opacity: var(--swipe-opacity, 0);
+}
+
+.tinder-card.swiping.swipe-up-preview .super-like-overlay {
+  opacity: var(--swipe-opacity, 0);
 }
 
 .tinder-card-image {
@@ -28,6 +183,7 @@
 }
 
 /* Tap Zones for Navigation */
+
 .tap-zone {
   position: absolute;
   top: 0;
@@ -47,6 +203,7 @@
 }
 
 /* Photo Progress Bars */
+
 .photo-progress-bars {
   position: absolute;
   top: 12px;
@@ -72,6 +229,7 @@
 }
 
 /* Profile Info Button */
+
 .profile-info-button {
   position: absolute;
   top: 12px;
@@ -98,6 +256,7 @@
 }
 
 /* User Info Overlay */
+
 .user-info-overlay {
   position: absolute;
   bottom: 0;
@@ -129,14 +288,33 @@
 .user-name {
   font-size: 28px;
   font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(
+    135deg,
+    #ff6b7a 0%,
+    #ff9a85 25%,
+    #ffc3a0 50%,
+    #ff6b7a 75%,
+    #ff9a85 100%
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   line-height: 1.2;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  animation: gradientShift 4s ease infinite;
 }
 
 .user-age {
   font-size: 24px;
-  font-weight: 400;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  background: linear-gradient(135deg, #ff4458 0%, #ff6b88 50%, #ff9a85 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  animation: gradientShift 3s ease infinite;
 }
 
 .user-distance {
@@ -144,12 +322,16 @@
   align-items: center;
   gap: 4px;
   font-size: 14px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
 /* Action Buttons */
+
 .tinder-action-buttons {
   position: absolute;
   bottom: 20px;
@@ -176,6 +358,7 @@
 }
 
 /* Rewind Button */
+
 .rewind-button {
   width: 42px;
   height: 42px;
@@ -190,6 +373,7 @@
 }
 
 /* Pass Button */
+
 .pass-button {
   width: 56px;
   height: 56px;
@@ -204,6 +388,7 @@
 }
 
 /* Super Like Button */
+
 .super-like-button {
   width: 42px;
   height: 42px;
@@ -218,6 +403,7 @@
 }
 
 /* Like Button */
+
 .like-button {
   width: 56px;
   height: 56px;
@@ -232,6 +418,7 @@
 }
 
 /* Boost Button */
+
 .boost-button {
   width: 42px;
   height: 42px;
@@ -245,7 +432,8 @@
   box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
 }
 
-/* Mobile Responsive */
+/* Mobile Responsive - Enhanced Colors */
+
 @media (max-width: 480px) {
   .tinder-card {
     width: 100%;
@@ -253,33 +441,44 @@
     height: 70vh;
     max-height: 600px;
     margin: 0 10px 20px 10px;
+    box-shadow: 0 6px 20px rgba(255, 68, 88, 0.2), 0 3px 10px rgba(0, 0, 0, 0.1);
   }
-  
   .user-name {
     font-size: 24px;
+    filter: drop-shadow(0 2px 6px rgba(255, 107, 122, 0.4));
   }
-  
   .user-age {
     font-size: 20px;
+    filter: drop-shadow(0 2px 6px rgba(255, 68, 88, 0.4));
   }
-  
+  .user-distance {
+    font-weight: 700;
+    filter: drop-shadow(0 1px 4px rgba(79, 195, 247, 0.4));
+  }
   .tinder-action-buttons {
     gap: 12px;
     padding: 0 16px;
   }
-  
   .action-button {
     transform: scale(0.9);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  }
+  .action-button:hover {
+    transform: scale(1) rotate(3deg);
   }
 }
 
 /* Scroll Mode Styles */
+
 .tinder-card.scroll-mode {
   height: 100%;
   width: 100%;
   overflow-y: auto;
   cursor: default;
   border-radius: 12px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .tinder-card.scroll-mode .tinder-card-image-container {
@@ -291,9 +490,30 @@
   display: none;
 }
 
+.tinder-card.scroll-mode .tinder-action-buttons {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  backdrop-filter: blur(10px);
+  padding: 16px 20px;
+  margin: 0;
+  border-top: 1px solid rgba(255, 107, 122, 0.1);
+  z-index: 10;
+}
+
 .scroll-content {
-  padding: 20px;
-  background: white;
+  padding: 20px 20px 80px 20px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(248, 249, 250, 0.95) 100%
+  );
+  flex: 1;
+  overflow-y: auto;
 }
 
 .scroll-section {
@@ -309,14 +529,20 @@
   margin: 0 0 12px 0;
   font-size: 24px;
   font-weight: 700;
-  color: #333;
+  background: linear-gradient(135deg, #ff4458 0%, #ff6b88 50%, #ff9a85 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .scroll-section h4 {
   margin: 0 0 12px 0;
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  background: black;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -326,57 +552,168 @@
   margin: 0;
   font-size: 16px;
   line-height: 1.5;
-  color: #666;
+  background: linear-gradient(135deg, #666 0%, #888 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  padding: 8px;
+  background-color: white;
+  border-radius: 12px;
+  border: 1px solid rgba(79, 195, 247, 0.15);
 }
 
 .info-item {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.info-item:not(.info-grid .info-item) {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: white;
+  border-radius: 12px;
   margin-bottom: 8px;
+  border: 1px solid rgba(255, 107, 122, 0.2);
+  transition: all 0.3s ease;
+}
+
+.info-item:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 254, 254, 0.874) 0%,
+    rgba(231, 225, 224, 0.847) 100%
+  );
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 122, 0.2);
+}
+
+.info-grid .info-item {
+  text-align: center;
+  padding: 16px 12px;
+  background-color: white;
+  display: flex;
 }
 
 .info-label {
   font-weight: 600;
-  color: #666;
+  background: black;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 14px;
 }
 
 .info-value {
-  color: #333;
+  background: black;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 16px;
+  font-weight: 600;
 }
 
-.interests-grid, .passions-grid {
+.interests-grid,
+.passions-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
+  padding: 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(248, 249, 250, 0.7) 100%
+  );
+  border-radius: 12px;
+  border: 1px solid rgba(255, 107, 122, 0.1);
 }
 
-.interest-bubble, .passion-tag {
+.interest-bubble,
+.passion-tag {
   padding: 8px 16px;
-  background: linear-gradient(135deg, #ff4458 0%, #ff6b7a 100%);
-  color: white;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 68, 88, 0.1) 0%,
+    rgba(255, 107, 122, 0.1) 50%,
+    rgba(255, 154, 133, 0.1) 100%
+  );
+  border: 2px solid rgba(255, 68, 88, 0.3);
+  background: black;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   border-radius: 20px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(255, 68, 88, 0.2);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.interest-bubble::before,
+.passion-tag::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 122, 0.08) 0%,
+    rgba(255, 154, 133, 0.08) 100%
+  );
+  border-radius: 18px;
+  z-index: -1;
+}
+
+.interest-bubble:hover,
+.passion-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 68, 88, 0.3);
+}
+
+.interest-bubble:hover::before,
+.passion-tag:hover::before {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 122, 0.12) 0%,
+    rgba(255, 154, 133, 0.12) 100%
+  );
 }
 
 .passion-tag {
-  background: #f0f0f0;
-  color: #333;
+  background: linear-gradient(135deg, #9c27b0 0%, #e91e63 50%, #ff6b88 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border: 2px solid rgba(156, 39, 176, 0.3);
+  box-shadow: 0 2px 8px rgba(156, 39, 176, 0.2);
+}
+
+.passion-tag::before {
+  background: linear-gradient(
+    135deg,
+    rgba(156, 39, 176, 0.08) 0%,
+    rgba(233, 30, 99, 0.08) 100%
+  );
+}
+
+.passion-tag:hover {
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+}
+
+.passion-tag:hover::before {
+  background: linear-gradient(
+    135deg,
+    rgba(156, 39, 176, 0.12) 0%,
+    rgba(233, 30, 99, 0.12) 100%
+  );
 }
 
 .photo-grid {
@@ -405,7 +742,60 @@
 }
 
 .verified-text {
-  color: #52c41a;
-  font-weight: 600;
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 50%, #95de64 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
   font-size: 16px;
+}
+
+/* Special Job/Work Highlights */
+
+.info-item:has(.info-label:contains("Job")) .info-value,
+.info-item .info-value:nth-child(2) {
+  background: linear-gradient(135deg, #ff6b88 0%, #ffc629 50%, #ff9a85 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  animation: gradientShift 2.5s ease infinite;
+}
+
+/* Glow effects for important text */
+
+.user-name:hover {
+  filter: drop-shadow(0 0 10px rgba(255, 107, 122, 0.5))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.user-age:hover {
+  filter: drop-shadow(0 0 8px rgba(255, 68, 88, 0.5))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Pulsing animation for distance */
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.user-distance {
+  animation: pulse 2s ease infinite;
+}
+
+/* Enhanced button hover effects */
+
+.action-button:hover {
+  transform: scale(1.15) rotate(5deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }

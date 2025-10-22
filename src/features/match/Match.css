@@ -3,6 +3,146 @@
   height: 100vh;
   background: #fafafa;
   overflow: hidden;
+  position: relative;
+}
+
+/* Overlay Styles */
+
+.overlay-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.overlay-content {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease-out;
+}
+
+.overlay-content h2 {
+  margin: 0 0 16px 0;
+  font-size: 24px;
+  background: linear-gradient(135deg, #ff4458 0%, #ff6b7a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.overlay-content p {
+  margin: 0 0 8px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.overlay-buttons {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Loading Spinner */
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 20px;
+  border: 4px solid #f0f0f0;
+  border-left: 4px solid #ff4458;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* No Users Icon */
+
+.no-users-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+/* Empty Card */
+
+.empty-card {
+  width: 345px;
+  height: 615px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #dee2e6;
+  margin: 0 auto;
+}
+
+.empty-card-content {
+  text-align: center;
+  color: #868e96;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.empty-card-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #495057;
+}
+
+.empty-card-content p {
+  margin: 0;
+  font-size: 14px;
+  color: #868e96;
+}
+
+/* Animations */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Sidebar Styles */
@@ -199,6 +339,7 @@
 }
 
 /* Image Navigation Buttons */
+
 .image-nav-btn {
   position: absolute;
   top: 50%;
@@ -230,6 +371,7 @@
 }
 
 /* Modern Image Indicators */
+
 .image-indicators {
   position: absolute;
   top: 20px;
@@ -265,6 +407,7 @@
 }
 
 /* Gradient Overlay */
+
 .card-gradient {
   position: absolute;
   bottom: 0;
@@ -282,6 +425,7 @@
   pointer-events: none;
   z-index: 5;
 }
+
 .info-btn-top {
   position: absolute;
   top: 30px;
@@ -305,6 +449,7 @@
 }
 
 /* Recently Active Badge */
+
 .recently-active {
   display: inline-flex;
   align-items: center;
@@ -329,7 +474,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -340,6 +486,7 @@
 }
 
 /* Card Name with Age */
+
 .card-age {
   font-size: 32px;
   font-weight: 400;
@@ -354,6 +501,7 @@
 }
 
 /* Card Action Buttons - Simplified to Like/Dislike */
+
 .card-action-buttons {
   display: flex;
   justify-content: center;
@@ -437,6 +585,7 @@
 }
 
 /* Bottom Navigation Bar */
+
 .bottom-navigation {
   display: flex;
   justify-content: center;
@@ -491,6 +640,7 @@
 }
 
 /* Card Main Info - Simplified */
+
 .card-main-info {
   position: absolute;
   bottom: 0;
@@ -519,6 +669,7 @@
 }
 
 /* Detail Arrow Button */
+
 .detail-arrow-btn {
   background: rgba(255, 255, 255, 0.9);
   border: none;
@@ -538,6 +689,7 @@
 }
 
 /* Looking For Section */
+
 .card-looking-for {
   display: flex;
   align-items: center;
@@ -563,6 +715,7 @@
 }
 
 /* Card Info Item */
+
 .card-info-item {
   display: flex;
   align-items: center;
@@ -581,6 +734,7 @@
 }
 
 /* Other Info for remaining images */
+
 .card-other-info {
   position: absolute;
   bottom: 20px;
@@ -596,7 +750,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(8px);
   padding: 8px 12px;
   border-radius: 12px;
@@ -609,6 +762,7 @@
 }
 
 /* Interests Overlay - Shown on image 2 or 3 */
+
 .interests-overlay {
   position: absolute;
   bottom: 0;
@@ -640,7 +794,7 @@
 }
 
 .interest-bubble {
-  background: rgba(255, 255, 255, 0.2);
+  /* background: rgba(255, 255, 255, 0.2); */
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   padding: 10px 16px;
@@ -662,6 +816,7 @@
 }
 
 /* Mini Info for other images */
+
 .card-mini-info {
   position: absolute;
   bottom: 25px;
@@ -686,6 +841,7 @@
 }
 
 /* Details Panel Header */
+
 .details-header {
   display: flex;
   justify-content: space-between;
@@ -718,6 +874,7 @@
 }
 
 /* Detail Overlay - Full Screen */
+
 .detail-overlay {
   position: fixed;
   top: 0;
@@ -773,6 +930,7 @@
 }
 
 /* Detail Image Section */
+
 .detail-image-section {
   padding: 0;
 }
@@ -790,6 +948,7 @@
 }
 
 /* Detail Sections */
+
 .detail-section {
   padding: 25px 20px;
   border-bottom: 1px solid #f5f5f5;
@@ -817,6 +976,7 @@
 }
 
 /* Info Grid */
+
 .info-grid {
   display: flex;
   flex-direction: column;
@@ -848,6 +1008,7 @@
 }
 
 /* Interests List */
+
 .interests-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -872,6 +1033,7 @@
 }
 
 /* Modern Detailed Info Panel */
+
 .card-details {
   position: absolute;
   bottom: 0;
@@ -946,7 +1108,7 @@
 }
 
 .detail-section h4::before {
-  content: '';
+  content: "";
   width: 4px;
   height: 18px;
   background: linear-gradient(135deg, #ff4458 0%, #ff6b7a 100%);
@@ -962,6 +1124,7 @@
 }
 
 /* Modern Stats Section */
+
 .stats-section {
   display: grid;
   grid-template-columns: 1fr;
@@ -982,7 +1145,7 @@
 }
 
 .stat-item::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -1047,6 +1210,7 @@
 }
 
 /* Modern Interests Tags */
+
 .card-interests {
   display: flex;
   flex-wrap: wrap;
@@ -1068,13 +1232,18 @@
 }
 
 .interest-tag::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   transition: left 0.5s;
 }
 
@@ -1099,6 +1268,7 @@
 }
 
 /* Old Action Buttons - Hidden/Removed */
+
 .action-buttons {
   display: none;
 }
@@ -1155,7 +1325,8 @@
   z-index: 10;
 }
 
-.header-left, .header-right {
+.header-left,
+.header-right {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1267,7 +1438,7 @@
 }
 
 .main-card.detail-mode {
-  width: 600px;
+  width: 480px;
   height: 90vh;
   z-index: 1001;
   position: fixed;
@@ -1523,20 +1694,18 @@
 }
 
 /* Mobile Responsive */
+
 @media (max-width: 768px) {
   .task-bar-left {
     display: none;
   }
-  
   .card-stack {
     padding: 10px 16px 120px;
   }
-  
   .main-card.detail-mode {
     width: 95vw;
     height: 95vh;
   }
-  
   .bottom-nav {
     display: flex;
   }
@@ -1545,5 +1714,37 @@
 @media (min-width: 769px) {
   .bottom-nav {
     display: none;
+  }
+}
+
+/* Mobile Overlay Responsive */
+
+@media (max-width: 480px) {
+  .overlay-content {
+    padding: 30px 20px;
+    max-width: 340px;
+  }
+  .overlay-content h2 {
+    font-size: 20px;
+  }
+  .overlay-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .overlay-buttons button {
+    width: 100%;
+    margin: 6px 0;
+  }
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+  }
+  .no-users-icon {
+    font-size: 48px;
+  }
+  .empty-card {
+    width: 100%;
+    max-width: 340px;
+    height: 500px;
   }
 }

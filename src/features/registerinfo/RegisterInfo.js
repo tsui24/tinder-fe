@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Form,
   Input,
@@ -35,6 +35,7 @@ import {
 } from "../../utils/notification";
 import "./RegisterInfo.css";
 import authService from "../../api/authService";
+import interestService from "../../api/interestService/interestService";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -49,63 +50,79 @@ function RegisterInfo() {
   const [tempSelectedInterests, setTempSelectedInterests] = useState([]);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
+  const [availableInterests, setAvailableInterests] = useState([]);
 
+  useEffect(() => {
+    // Fetch interests from backend API
+    const fetchInterests = async () => {
+      try {
+        const response = await interestService.getInterests();
+        if (response && response.data) {
+          setAvailableInterests(response.data.result);
+        }
+      } catch (error) {
+        console.error("Error fetching interests:", error);
+        setAvailableInterests([]);
+      }
+    };
+    fetchInterests();
+  }, []);
   // Database of available interests
-  const availableInterests = [
-    { id: 1, name: "Travel" },
-    { id: 2, name: "Photography" },
-    { id: 3, name: "Music" },
-    { id: 4, name: "Movies" },
-    { id: 5, name: "Reading" },
-    { id: 6, name: "Cooking" },
-    { id: 7, name: "Gaming" },
-    { id: 8, name: "Sports" },
-    { id: 9, name: "Fitness" },
-    { id: 10, name: "Yoga" },
-    { id: 11, name: "Dancing" },
-    { id: 12, name: "Art" },
-    { id: 13, name: "Fashion" },
-    { id: 14, name: "Technology" },
-    { id: 15, name: "Nature" },
-    { id: 16, name: "Animals" },
-    { id: 17, name: "Coffee" },
-    { id: 18, name: "Wine" },
-    { id: 19, name: "Beer" },
-    { id: 20, name: "Foodie" },
-    { id: 21, name: "Adventure" },
-    { id: 22, name: "Beach" },
-    { id: 23, name: "Mountains" },
-    { id: 24, name: "Camping" },
-    { id: 25, name: "Hiking" },
-    { id: 26, name: "Running" },
-    { id: 27, name: "Swimming" },
-    { id: 28, name: "Basketball" },
-    { id: 29, name: "Football" },
-    { id: 30, name: "Soccer" },
-    { id: 31, name: "Tennis" },
-    { id: 32, name: "Baseball" },
-    { id: 33, name: "Volleyball" },
-    { id: 34, name: "Rock Climbing" },
-    { id: 35, name: "Surfing" },
-    { id: 36, name: "Skiing" },
-    { id: 37, name: "Snowboarding" },
-    { id: 38, name: "Cycling" },
-    { id: 39, name: "Motorcycles" },
-    { id: 40, name: "Cars" },
-    { id: 41, name: "Science" },
-    { id: 42, name: "History" },
-    { id: 43, name: "Politics" },
-    { id: 44, name: "Business" },
-    { id: 45, name: "Entrepreneurship" },
-    { id: 46, name: "Investment" },
-    { id: 47, name: "Cryptocurrency" },
-    { id: 48, name: "Meditation" },
-    { id: 49, name: "Spirituality" },
-    { id: 50, name: "Volunteering" },
-    { id: 51, name: "Charity" },
-    { id: 52, name: "Environment" },
-    { id: 53, name: "Sustainability" },
-  ];
+  // const availableInterests = [
+  //   { id: 1, name: "Travel" },
+  //   { id: 2, name: "Photography" },
+  //   { id: 3, name: "Music" },
+  //   { id: 4, name: "Movies" },
+  //   { id: 5, name: "Reading" },
+  //   { id: 6, name: "Cooking" },
+  //   { id: 7, name: "Gaming" },
+  //   { id: 8, name: "Sports" },
+  //   { id: 9, name: "Fitness" },
+  //   { id: 10, name: "Yoga" },
+  //   { id: 11, name: "Dancing" },
+  //   { id: 12, name: "Art" },
+  //   { id: 13, name: "Fashion" },
+  //   { id: 14, name: "Technology" },
+  //   { id: 15, name: "Nature" },
+  //   { id: 16, name: "Animals" },
+  //   { id: 17, name: "Coffee" },
+  //   { id: 18, name: "Wine" },
+  //   { id: 19, name: "Beer" },
+  //   { id: 20, name: "Foodie" },
+  //   { id: 21, name: "Adventure" },
+  //   { id: 22, name: "Beach" },
+  //   { id: 23, name: "Mountains" },
+  //   { id: 24, name: "Camping" },
+  //   { id: 25, name: "Hiking" },
+  //   { id: 26, name: "Running" },
+  //   { id: 27, name: "Swimming" },
+  //   { id: 28, name: "Basketball" },
+  //   { id: 29, name: "Football" },
+  //   { id: 30, name: "Soccer" },
+  //   { id: 31, name: "Tennis" },
+  //   { id: 32, name: "Baseball" },
+  //   { id: 33, name: "Volleyball" },
+  //   { id: 34, name: "Rock Climbing" },
+  //   { id: 35, name: "Surfing" },
+  //   { id: 36, name: "Skiing" },
+  //   { id: 37, name: "Snowboarding" },
+  //   { id: 38, name: "Cycling" },
+  //   { id: 39, name: "Motorcycles" },
+  //   { id: 40, name: "Cars" },
+  //   { id: 41, name: "Science" },
+  //   { id: 42, name: "History" },
+  //   { id: 43, name: "Politics" },
+  //   { id: 44, name: "Business" },
+  //   { id: 45, name: "Entrepreneurship" },
+  //   { id: 46, name: "Investment" },
+  //   { id: 47, name: "Cryptocurrency" },
+  //   { id: 48, name: "Meditation" },
+  //   { id: 49, name: "Spirituality" },
+  //   { id: 50, name: "Volunteering" },
+  //   { id: 51, name: "Charity" },
+  //   { id: 52, name: "Environment" },
+  //   { id: 53, name: "Sustainability" },
+  // ];
 
   const handleInterestsClick = () => {
     setTempSelectedInterests([...selectedInterests]);
@@ -536,7 +553,8 @@ function RegisterInfo() {
                     className="input-icon"
                     style={{ marginRight: 8 }}
                   />
-                  {selectedInterests.length > 0 ? (
+                  {Array.isArray(selectedInterests) &&
+                  selectedInterests.length > 0 ? (
                     <div className="selected-interests">
                       {selectedInterests.map((interest) => (
                         <Tag
@@ -652,26 +670,29 @@ function RegisterInfo() {
           </Text>
 
           <div className="interests-grid">
-            {availableInterests.map((interest) => (
-              <div
-                key={interest.id}
-                className={`interest-item ${
-                  tempSelectedInterests.some((item) => item.id === interest.id)
-                    ? "selected"
-                    : ""
-                }`}
-                onClick={() => handleInterestChange(interest)}
-              >
-                <Checkbox
-                  checked={tempSelectedInterests.some(
-                    (item) => item.id === interest.id
-                  )}
-                  onChange={() => handleInterestChange(interest)}
+            {Array.isArray(availableInterests) &&
+              availableInterests.map((interest) => (
+                <div
+                  key={interest.id}
+                  className={`interest-item ${
+                    tempSelectedInterests.some(
+                      (item) => item.id === interest.id
+                    )
+                      ? "selected"
+                      : ""
+                  }`}
+                  onClick={() => handleInterestChange(interest)}
                 >
-                  {interest.name}
-                </Checkbox>
-              </div>
-            ))}
+                  <Checkbox
+                    checked={tempSelectedInterests.some(
+                      (item) => item.id === interest.id
+                    )}
+                    onChange={() => handleInterestChange(interest)}
+                  >
+                    {interest.name}
+                  </Checkbox>
+                </div>
+              ))}
           </div>
         </div>
       </Modal>

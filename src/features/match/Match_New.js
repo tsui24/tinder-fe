@@ -164,7 +164,11 @@ const Match = () => {
       <div className="main-content">
         <div className="tinder-cards-container">
           {currentUser && (
-            <div className={`tinder-card-stack ${swipeDirection ? `swipe-${swipeDirection}` : ""}`}>
+            <div
+              className={`tinder-card-stack ${
+                swipeDirection ? `swipe-${swipeDirection}` : ""
+              }`}
+            >
               <TinderCard
                 user={currentUser}
                 onLike={handleLike}
@@ -206,7 +210,9 @@ const Match = () => {
         <div className="detail-overlay show">
           <div className="detail-content">
             <div className="detail-header">
-              <h2>{currentUser.name}, {currentUser.age}</h2>
+              <h2>
+                {currentUser.name}, {currentUser.age}
+              </h2>
               <Button
                 type="text"
                 icon={<CloseOutlined />}
@@ -231,13 +237,17 @@ const Match = () => {
 
             {/* Bio Section */}
             <div className="detail-section">
-              <h3><HeartOutlined /> About {currentUser.name}</h3>
+              <h3>
+                <HeartOutlined /> About {currentUser.name}
+              </h3>
               <p className="bio-text">{currentUser.bio}</p>
             </div>
 
             {/* Basic Info */}
             <div className="detail-section">
-              <h3><UserOutlined /> Basic Info</h3>
+              <h3>
+                <UserOutlined /> Basic Info
+              </h3>
               <div className="info-grid">
                 <div className="info-row">
                   <span className="info-label">Height</span>
@@ -253,14 +263,18 @@ const Match = () => {
                 </div>
                 <div className="info-row">
                   <span className="info-label">Distance</span>
-                  <span className="info-value">{currentUser.distance} km away</span>
+                  <span className="info-value">
+                    {currentUser.distance} km away
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Interests Section */}
             <div className="detail-section">
-              <h3><FireOutlined /> Interests</h3>
+              <h3>
+                <FireOutlined /> Interests
+              </h3>
               <div className="interests-list">
                 {currentUser.interests.map((interest, index) => (
                   <div key={index} className="interest-item">

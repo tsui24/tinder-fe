@@ -2,6 +2,7 @@ import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { LandingPage } from "../pages";
 import { Login, Register, RegisterInfo, Match } from "../features";
+import Settings from "../pages/Settings/Settings";
 import Layout from "../layouts/Layout";
 import ProtectedRoute from "../components/ProtectedRoute";
 
@@ -35,6 +36,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <RegisterInfo />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "settings",
+        element: (
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         ),
       },
