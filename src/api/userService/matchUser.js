@@ -9,5 +9,22 @@ const matchUserService = {
   getSettingUser: () => apiClient.get(`${BASE_URL}/get-setting-user`),
   updateSettingUser: (settingData) =>
     apiClient.patch(`${BASE_URL}/update-setting-user`, settingData),
+  getUsersWhoLikedMe: () => apiClient.get(`${BASE_URL}/get-user-likes`),
+  likeUser: (userToId) => {
+    console.log("🌐🌐🌐 API SERVICE: LIKE USER");
+    console.log("📡 URL: POST /like");
+    console.log("📋 Params: { userToId:", userToId, ", status: 0 (LIKE) }");
+    return apiClient.post(`/like`, null, {
+      params: { userToId, status: 0 },
+    });
+  },
+  dislikeUser: (userToId) => {
+    console.log("🌐🌐🌐 API SERVICE: DISLIKE USER");
+    console.log("📡 URL: POST /api/like");
+    console.log("📋 Params: { userToId:", userToId, ", status: 1 (DISLIKE) }");
+    return apiClient.post(`/like`, null, {
+      params: { userToId, status: 1 },
+    });
+  },
 };
 export default matchUserService;
