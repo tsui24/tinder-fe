@@ -24,6 +24,10 @@ import {
   PlusOutlined,
   HeartOutlined,
   LoadingOutlined,
+  EditOutlined,
+  HomeOutlined,
+  BookOutlined,
+  LineHeightOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -337,6 +341,11 @@ function RegisterInfo() {
         birthday: values.birthday
           ? dayjs(values.birthday).format("DD/MM/YYYY")
           : null,
+        bio: values.bio || "",
+        company: values.company || "",
+        school: values.school || "",
+        tall: values.tall ? Number(values.tall) : null,
+        interestIds: selectedInterests.map((interest) => interest.id),
         images: imageUrls,
       };
 
@@ -526,6 +535,99 @@ function RegisterInfo() {
                           current < dayjs().subtract(100, "year"))
                       );
                     }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item
+              label="Bio"
+              name="bio"
+              rules={[
+                {
+                  max: 500,
+                  message: "Bio must be less than 500 characters!",
+                },
+              ]}
+            >
+              <Input.TextArea
+                placeholder="Tell others about yourself..."
+                size="large"
+                className="register-info-input"
+                rows={3}
+                showCount
+                maxLength={500}
+              />
+            </Form.Item>
+
+            <Row gutter={16}>
+              <Col xs={24} sm={8} md={8}>
+                <Form.Item
+                  label="Height (cm)"
+                  name="tall"
+                  rules={[
+                    {
+                      pattern: /^[0-9]+$/,
+                      message: "Please enter a valid height in centimeters!",
+                    },
+                    {
+                      validator: (_, value) => {
+                        if (value && (value < 100 || value > 250)) {
+                          return Promise.reject(
+                            new Error("Height must be between 100-250 cm!")
+                          );
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
+                >
+                  <Input
+                    prefix={<LineHeightOutlined className="input-icon" />}
+                    placeholder="e.g. 170"
+                    size="large"
+                    className="register-info-input"
+                    suffix="cm"
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} sm={8} md={8}>
+                <Form.Item
+                  label="Company"
+                  name="company"
+                  rules={[
+                    {
+                      max: 100,
+                      message: "Company name must be less than 100 characters!",
+                    },
+                  ]}
+                >
+                  <Input
+                    prefix={<HomeOutlined className="input-icon" />}
+                    placeholder="Where do you work?"
+                    size="large"
+                    className="register-info-input"
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} sm={8} md={8}>
+                <Form.Item
+                  label="School"
+                  name="school"
+                  rules={[
+                    {
+                      max: 100,
+                      message: "School name must be less than 100 characters!",
+                    },
+                  ]}
+                >
+                  <Input
+                    prefix={<BookOutlined className="input-icon" />}
+                    placeholder="Where did you study?"
+                    size="large"
+                    className="register-info-input"
                   />
                 </Form.Item>
               </Col>

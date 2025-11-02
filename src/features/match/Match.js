@@ -9,6 +9,9 @@ import {
   Col,
   Typography,
   Modal,
+  Input,
+  List,
+  Badge,
 } from "antd";
 import {
   MessageOutlined,
@@ -23,6 +26,7 @@ import {
   HeartOutlined,
   UserOutlined,
   EyeOutlined,
+  SendOutlined,
 } from "@ant-design/icons";
 import TinderCard from "./TinderCard";
 import { useNavigate } from "react-router-dom";
@@ -47,6 +51,14 @@ const Match = () => {
   const [likesLoading, setLikesLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
+
+  // Messages feature states
+  const [showMessagesOverlay, setShowMessagesOverlay] = useState(false);
+  const [matches, setMatches] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
 
   // Transform API data to match our card format
   const transformUserData = (apiUsers) => {
@@ -111,6 +123,129 @@ const Match = () => {
       console.log(`Liked back ${user.fullName}`);
     } catch (error) {
       console.error("Error liking back user:", error);
+    }
+  };
+
+  // Load matches function
+  const loadMatches = async () => {
+    setMessagesLoading(true);
+    try {
+      // Giả sử có API để lấy danh sách matches
+      // const response = await matchUserService.getMatches();
+      // setMatches(response.data.result || []);
+      
+      // Mock data for now
+      const mockMatches = [
+        {
+          id: 1,
+          userId: 101,
+          fullName: "Sarah Johnson",
+          avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b789?w=100&h=100&fit=crop&crop=face",
+          lastMessage: "Hey! How are you doing?",
+          lastMessageTime: "2 min ago",
+          unreadCount: 2
+        },
+        {
+          id: 2,
+          userId: 102,
+          fullName: "Emma Wilson",
+          avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face",
+          lastMessage: "That sounds great!",
+          lastMessageTime: "1 hour ago",
+          unreadCount: 0
+        },
+        {
+          id: 3,
+          userId: 103,
+          fullName: "Jessica Davis",
+          avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face",
+          lastMessage: "See you later!",
+          lastMessageTime: "3 hours ago",
+          unreadCount: 1
+        }
+      ];
+      setMatches(mockMatches);
+    } catch (error) {
+      console.error("Error loading matches:", error);
+      setMatches([]);
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
+
+  // Load messages for selected match
+  const loadMessages = async (matchId) => {
+    try {
+      // Mock messages data
+      const mockMessages = [
+        {
+          id: 1,
+          senderId: 101,
+          message: "Hi there! 👋",
+          timestamp: "10:30 AM",
+          isOwn: false
+        },
+        {
+          id: 2,
+          senderId: "me",
+          message: "Hello! How are you?",
+          timestamp: "10:32 AM",
+          isOwn: true
+        },
+        {
+          id: 3,
+          senderId: 101,
+          message: "I'm doing great! Just got back from a hiking trip",
+          timestamp: "10:35 AM",
+          isOwn: false
+        },
+        {
+          id: 4,
+          senderId: "me",
+          message: "That sounds amazing! Where did you go?",
+          timestamp: "10:36 AM",
+          isOwn: true
+        },
+        {
+          id: 5,
+          senderId: 101,
+          message: "Hey! How are you doing?",
+          timestamp: "2 min ago",
+          isOwn: false
+        }
+      ];
+      setMessages(mockMessages);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+      setMessages([]);
+    }
+  };
+
+  // Handle match selection
+  const handleMatchSelect = (match) => {
+    setSelectedMatch(match);
+    loadMessages(match.id);
+  };
+
+  // Handle send message
+  const handleSendMessage = () => {
+    if (newMessage.trim() && selectedMatch) {
+      const message = {
+        id: Date.now(),
+        senderId: "me",
+        message: newMessage.trim(),
+        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        isOwn: true
+      };
+      setMessages(prev => [...prev, message]);
+      setNewMessage("");
+      
+      // Update last message in matches list
+      setMatches(prev => prev.map(match => 
+        match.id === selectedMatch.id 
+          ? {...match, lastMessage: newMessage.trim(), lastMessageTime: "now", unreadCount: 0}
+          : match
+      ));
     }
   };
 
@@ -514,11 +649,16 @@ const Match = () => {
             </div>
 
             <div
-              className="task-item"
+              className={`task-item ${showMessagesOverlay ? "active" : ""}`}
               title="Messages"
-              onClick={() => navigate("/messages")}
+              onClick={() => {
+                setShowMessagesOverlay(!showMessagesOverlay);
+                if (!showMessagesOverlay) {
+                  loadMatches();
+                }
+              }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="#ccc">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill={showMessagesOverlay ? "#ff4458" : "#ccc"}>
                 <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
               </svg>
             </div>
@@ -765,6 +905,126 @@ const Match = () => {
                     </Col>
                   ))}
                 </Row>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Messages Overlay */}
+      {showMessagesOverlay && (
+        <div className="messages-overlay">
+          <div className="messages-container">
+            {/* Header */}
+            <div className="messages-header">
+              <Button
+                type="text"
+                icon={<LeftOutlined />}
+                onClick={() => {
+                  setShowMessagesOverlay(false);
+                  setSelectedMatch(null);
+                }}
+                className="messages-back-btn"
+              />
+              <Typography.Title level={4} className="messages-title">
+                Messages
+              </Typography.Title>
+              <div style={{ width: 32 }} />
+            </div>
+
+            {/* Content */}
+            <div className="messages-content">
+              {messagesLoading ? (
+                <div className="messages-loading">
+                  <Spin size="large" />
+                  <Typography.Text>Loading matches...</Typography.Text>
+                </div>
+              ) : (
+                <div className="messages-layout">
+                  {/* Matches List */}
+                  <div className={`matches-list ${selectedMatch ? 'with-chat' : ''}`}>
+                    {matches.length === 0 ? (
+                      <div className="matches-empty">
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description="No matches yet"
+                        />
+                      </div>
+                    ) : (
+                      <List
+                        dataSource={matches}
+                        renderItem={(match) => (
+                          <List.Item
+                            className={`match-item ${selectedMatch?.id === match.id ? 'selected' : ''}`}
+                            onClick={() => handleMatchSelect(match)}
+                          >
+                            <List.Item.Meta
+                              avatar={
+                                <Badge count={match.unreadCount} size="small">
+                                  <Avatar size={50} src={match.avatar} />
+                                </Badge>
+                              }
+                              title={<span className="match-name">{match.fullName}</span>}
+                              description={
+                                <div className="match-message">
+                                  <span className="last-message">{match.lastMessage}</span>
+                                  <span className="message-time">{match.lastMessageTime}</span>
+                                </div>
+                              }
+                            />
+                          </List.Item>
+                        )}
+                      />
+                    )}
+                  </div>
+
+                  {/* Chat Area */}
+                  {selectedMatch && (
+                    <div className="chat-area">
+                      {/* Chat Header */}
+                      <div className="chat-header">
+                        <Avatar size={40} src={selectedMatch.avatar} />
+                        <div className="chat-user-info">
+                          <Typography.Text strong>{selectedMatch.fullName}</Typography.Text>
+                          <Typography.Text type="secondary" className="chat-status">Online</Typography.Text>
+                        </div>
+                      </div>
+
+                      {/* Messages */}
+                      <div className="chat-messages">
+                        {messages.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`message ${message.isOwn ? 'own' : 'other'}`}
+                          >
+                            <div className="message-bubble">
+                              <span className="message-text">{message.message}</span>
+                              <span className="message-timestamp">{message.timestamp}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Message Input */}
+                      <div className="chat-input">
+                        <Input
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          placeholder="Type a message..."
+                          onPressEnter={handleSendMessage}
+                          suffix={
+                            <Button
+                              type="text"
+                              icon={<SendOutlined />}
+                              onClick={handleSendMessage}
+                              disabled={!newMessage.trim()}
+                            />
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
