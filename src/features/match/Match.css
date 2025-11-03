@@ -2289,6 +2289,7 @@
 }
 
 /* Messages Overlay Styles */
+
 .messages-overlay {
   position: fixed;
   top: 0;
@@ -2367,6 +2368,7 @@
 }
 
 /* Matches List */
+
 .matches-list {
   width: 350px;
   min-width: 350px;
@@ -2432,6 +2434,7 @@
 }
 
 /* Chat Area */
+
 .chat-area {
   flex: 1;
   display: flex;
@@ -2528,6 +2531,7 @@
 }
 
 /* Chat Input */
+
 .chat-input {
   padding: 16px 20px;
   border-top: 1px solid #f0f0f0;
@@ -2563,6 +2567,7 @@
 }
 
 /* Responsive Design */
+
 @media (max-width: 768px) {
   .messages-container {
     width: 100%;
@@ -2570,11 +2575,9 @@
     max-height: 100vh;
     border-radius: 0;
   }
-  
   .messages-layout {
     flex-direction: column;
   }
-  
   .matches-list {
     width: 100%;
     min-width: unset;
@@ -2582,11 +2585,9 @@
     border-right: none;
     border-bottom: 1px solid #f0f0f0;
   }
-  
   .matches-list.with-chat {
     display: none;
   }
-  
   .chat-area {
     height: 60%;
   }
@@ -2596,19 +2597,15 @@
   .messages-header h4 {
     font-size: 18px !important;
   }
-  
   .messages-header {
     padding: 12px 16px;
   }
-  
   .chat-header {
     padding: 12px 16px;
   }
-  
   .chat-messages {
     padding: 16px;
   }
-  
   .chat-input {
     padding: 12px 16px;
   }

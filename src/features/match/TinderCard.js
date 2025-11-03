@@ -99,29 +99,32 @@ const TinderCard = ({
     if (Math.abs(deltaX) > 100) {
       if (deltaX > 0) {
         // Swipe right - Like
-        if (cardRef.current) {
+        if (cardRef.current && cardRef.current.classList) {
           cardRef.current.classList.add("swipe-right");
           setTimeout(() => onLike(), 300);
         }
       } else {
         // Swipe left - Dislike
-        if (cardRef.current) {
+        if (cardRef.current && cardRef.current.classList) {
           cardRef.current.classList.add("swipe-left");
           setTimeout(() => onDislike(), 300);
         }
       }
     } else if (Math.abs(deltaY) > 100 && deltaY < 0) {
       // Swipe up - Super Like
-      if (cardRef.current) {
+      if (cardRef.current && cardRef.current.classList) {
         cardRef.current.classList.add("swipe-up");
         setTimeout(() => onSuperLike(), 300);
       }
     } else {
       // Bounce back
-      if (cardRef.current) {
-        cardRef.current.classList.add("bounce-back");
+      if (cardRef.current && cardRef.current.classList) {
+        const cardElement = cardRef.current; // Store reference
+        cardElement.classList.add("bounce-back");
         setTimeout(() => {
-          cardRef.current.classList.remove("bounce-back");
+          if (cardElement && cardElement.classList) {
+            cardElement.classList.remove("bounce-back");
+          }
         }, 300);
       }
     }

@@ -32,6 +32,7 @@ import TinderCard from "./TinderCard";
 import { useNavigate } from "react-router-dom";
 import matchUserService from "../../api/userService/matchUser";
 import notification from "../../utils/notification";
+import { getCurrentUserId } from "../../utils/auth";
 import "./Match.css";
 
 const Match = () => {
@@ -130,44 +131,67 @@ const Match = () => {
   const loadMatches = async () => {
     setMessagesLoading(true);
     try {
-      // Giả sử có API để lấy danh sách matches
-      // const response = await matchUserService.getMatches();
-      // setMatches(response.data.result || []);
-      
-      // Mock data for now
-      const mockMatches = [
-        {
-          id: 1,
-          userId: 101,
-          fullName: "Sarah Johnson",
-          avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b789?w=100&h=100&fit=crop&crop=face",
-          lastMessage: "Hey! How are you doing?",
-          lastMessageTime: "2 min ago",
-          unreadCount: 2
-        },
-        {
-          id: 2,
-          userId: 102,
-          fullName: "Emma Wilson",
-          avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face",
-          lastMessage: "That sounds great!",
-          lastMessageTime: "1 hour ago",
-          unreadCount: 0
-        },
-        {
-          id: 3,
-          userId: 103,
-          fullName: "Jessica Davis",
-          avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face",
-          lastMessage: "See you later!",
-          lastMessageTime: "3 hours ago",
-          unreadCount: 1
-        }
-      ];
-      setMatches(mockMatches);
+      console.log("🔄 Loading matches from API...");
+      const response = await matchUserService.getMatches();
+
+      console.log("📡 API Response:", response);
+
+      if (response && response.data && response.data.code === 200) {
+        const apiMatches = response.data.result || [];
+        console.log("✅ Matches loaded:", apiMatches);
+
+        // Transform API data to match our UI format
+        const transformedMatches = apiMatches.map((match) => {
+          // Format lastMessageTime nếu có
+          let formattedLastMessageTime = null;
+          if (match.lastMessageTime) {
+            try {
+              const date = new Date(match.lastMessageTime);
+              formattedLastMessageTime = date.toLocaleString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false // 24-hour format
+              });
+              console.log("🕒 Match time formatted:", match.lastMessageTime, "→", formattedLastMessageTime);
+            } catch (timeError) {
+              console.warn("Error formatting match time:", timeError);
+              formattedLastMessageTime = match.lastMessageTime;
+            }
+          }
+
+          return {
+            id: match.matchId,
+            userId: match.userId,
+            fullName: match.fullName,
+            avatar: match.avatarUrl,
+            lastMessage: match.lastMessage || "Chưa có tin nhắn",
+            lastMessageTime: formattedLastMessageTime,
+            unreadCount: 0, // API không có field này, set default
+          };
+        });
+
+        setMatches(transformedMatches);
+        console.log("🎉 Transformed matches:", transformedMatches);
+      } else {
+        console.error("❌ Invalid API response:", response);
+        setMatches([]);
+        notification.showError("Không thể tải danh sách matches");
+      }
     } catch (error) {
-      console.error("Error loading matches:", error);
+      console.error("❌ Error loading matches:", error);
       setMatches([]);
+
+      // Hiển thị thông báo lỗi thân thiện
+      if (error.response?.status === 401) {
+        notification.showError("Phiên đăng nhập đã hết hạn");
+      } else if (error.response?.status === 404) {
+        notification.showWarning("Chưa có matches nào");
+      } else {
+        notification.showError("Lỗi khi tải danh sách matches");
+      }
     } finally {
       setMessagesLoading(false);
     }
@@ -176,48 +200,100 @@ const Match = () => {
   // Load messages for selected match
   const loadMessages = async (matchId) => {
     try {
-      // Mock messages data
-      const mockMessages = [
-        {
-          id: 1,
-          senderId: 101,
-          message: "Hi there! 👋",
-          timestamp: "10:30 AM",
-          isOwn: false
-        },
-        {
-          id: 2,
-          senderId: "me",
-          message: "Hello! How are you?",
-          timestamp: "10:32 AM",
-          isOwn: true
-        },
-        {
-          id: 3,
-          senderId: 101,
-          message: "I'm doing great! Just got back from a hiking trip",
-          timestamp: "10:35 AM",
-          isOwn: false
-        },
-        {
-          id: 4,
-          senderId: "me",
-          message: "That sounds amazing! Where did you go?",
-          timestamp: "10:36 AM",
-          isOwn: true
-        },
-        {
-          id: 5,
-          senderId: 101,
-          message: "Hey! How are you doing?",
-          timestamp: "2 min ago",
-          isOwn: false
+      console.log("🔄 Loading messages for matchId:", matchId);
+
+      const response = await matchUserService.getMessages(matchId);
+      console.log("📡 Messages API Response:", response);
+
+      if (response && response.data) {
+        const { code, message: apiMessage, result } = response.data;
+
+        // Handle 204 No Content - chưa có tin nhắn
+        if (code === 204) {
+          console.log("📭 No messages found for this match");
+          setMessages([]);
+          return;
         }
-      ];
-      setMessages(mockMessages);
+
+        // Handle 200 OK - có tin nhắn
+        if (code === 200 && result) {
+          console.log("✅ Messages loaded:", result);
+
+          // Get current user ID để xác định ai là người gửi
+          const currentUserId = getCurrentUserId();
+          console.log("👤 Current User ID:", currentUserId);
+
+          // Transform API messages to UI format
+          const transformedMessages = result.map((msg, index) => {
+            // Check if current user is the sender
+            const isCurrentUserSender =
+              msg.senderId === parseInt(currentUserId);
+
+            // Format timestamp - hiển thị ngày tháng và thời gian 24h
+            let formattedTime = "Unknown time";
+            if (msg.sentAt) {
+              try {
+                const date = new Date(msg.sentAt);
+
+                // Format: DD/MM/YYYY HH:MM
+                formattedTime = date.toLocaleString("vi-VN", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false, // 24-hour format
+                });
+
+                console.log(
+                  "🕒 Formatted time:",
+                  msg.sentAt,
+                  "→",
+                  formattedTime
+                );
+              } catch (timeError) {
+                console.warn("Error formatting time:", timeError);
+                formattedTime = msg.sentAt;
+              }
+            }
+
+            return {
+              id: index + 1, // Simple ID for UI
+              matchId: msg.matchId,
+              senderId: msg.senderId,
+              senderName: msg.senderName,
+              message: msg.content,
+              timestamp: formattedTime,
+              isOwn: isCurrentUserSender, // true nếu tin nhắn của mình
+              read: msg.read,
+              sentAt: msg.sentAt,
+            };
+          });
+
+          console.log("🎉 Transformed messages:", transformedMessages);
+          setMessages(transformedMessages);
+        } else {
+          console.error("❌ Unexpected API response:", response.data);
+          setMessages([]);
+          notification.showError("Lỗi tải tin nhắn");
+        }
+      } else {
+        console.error("❌ Invalid API response structure:", response);
+        setMessages([]);
+        notification.showError("Lỗi tải tin nhắn");
+      }
     } catch (error) {
-      console.error("Error loading messages:", error);
+      console.error("❌ Error loading messages:", error);
       setMessages([]);
+
+      // Handle specific error codes
+      if (error.response?.status === 404) {
+        notification.showWarning("Match không tồn tại");
+      } else if (error.response?.status === 401) {
+        notification.showError("Phiên đăng nhập đã hết hạn");
+      } else {
+        notification.showError("Lỗi tải tin nhắn");
+      }
     }
   };
 
@@ -234,18 +310,28 @@ const Match = () => {
         id: Date.now(),
         senderId: "me",
         message: newMessage.trim(),
-        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-        isOwn: true
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        isOwn: true,
       };
-      setMessages(prev => [...prev, message]);
+      setMessages((prev) => [...prev, message]);
       setNewMessage("");
-      
+
       // Update last message in matches list
-      setMatches(prev => prev.map(match => 
-        match.id === selectedMatch.id 
-          ? {...match, lastMessage: newMessage.trim(), lastMessageTime: "now", unreadCount: 0}
-          : match
-      ));
+      setMatches((prev) =>
+        prev.map((match) =>
+          match.id === selectedMatch.id
+            ? {
+                ...match,
+                lastMessage: newMessage.trim(),
+                lastMessageTime: "now",
+                unreadCount: 0,
+              }
+            : match
+        )
+      );
     }
   };
 
@@ -658,7 +744,12 @@ const Match = () => {
                 }
               }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill={showMessagesOverlay ? "#ff4458" : "#ccc"}>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill={showMessagesOverlay ? "#ff4458" : "#ccc"}
+              >
                 <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
               </svg>
             </div>
@@ -942,7 +1033,11 @@ const Match = () => {
               ) : (
                 <div className="messages-layout">
                   {/* Matches List */}
-                  <div className={`matches-list ${selectedMatch ? 'with-chat' : ''}`}>
+                  <div
+                    className={`matches-list ${
+                      selectedMatch ? "with-chat" : ""
+                    }`}
+                  >
                     {matches.length === 0 ? (
                       <div className="matches-empty">
                         <Empty
@@ -955,7 +1050,9 @@ const Match = () => {
                         dataSource={matches}
                         renderItem={(match) => (
                           <List.Item
-                            className={`match-item ${selectedMatch?.id === match.id ? 'selected' : ''}`}
+                            className={`match-item ${
+                              selectedMatch?.id === match.id ? "selected" : ""
+                            }`}
                             onClick={() => handleMatchSelect(match)}
                           >
                             <List.Item.Meta
@@ -964,11 +1061,19 @@ const Match = () => {
                                   <Avatar size={50} src={match.avatar} />
                                 </Badge>
                               }
-                              title={<span className="match-name">{match.fullName}</span>}
+                              title={
+                                <span className="match-name">
+                                  {match.fullName}
+                                </span>
+                              }
                               description={
                                 <div className="match-message">
-                                  <span className="last-message">{match.lastMessage}</span>
-                                  <span className="message-time">{match.lastMessageTime}</span>
+                                  <span className="last-message">
+                                    {match.lastMessage}
+                                  </span>
+                                  <span className="message-time">
+                                    {match.lastMessageTime}
+                                  </span>
                                 </div>
                               }
                             />
@@ -985,8 +1090,15 @@ const Match = () => {
                       <div className="chat-header">
                         <Avatar size={40} src={selectedMatch.avatar} />
                         <div className="chat-user-info">
-                          <Typography.Text strong>{selectedMatch.fullName}</Typography.Text>
-                          <Typography.Text type="secondary" className="chat-status">Online</Typography.Text>
+                          <Typography.Text strong>
+                            {selectedMatch.fullName}
+                          </Typography.Text>
+                          <Typography.Text
+                            type="secondary"
+                            className="chat-status"
+                          >
+                            Online
+                          </Typography.Text>
                         </div>
                       </div>
 
@@ -995,11 +1107,17 @@ const Match = () => {
                         {messages.map((message) => (
                           <div
                             key={message.id}
-                            className={`message ${message.isOwn ? 'own' : 'other'}`}
+                            className={`message ${
+                              message.isOwn ? "own" : "other"
+                            }`}
                           >
                             <div className="message-bubble">
-                              <span className="message-text">{message.message}</span>
-                              <span className="message-timestamp">{message.timestamp}</span>
+                              <span className="message-text">
+                                {message.message}
+                              </span>
+                              <span className="message-timestamp">
+                                {message.timestamp}
+                              </span>
                             </div>
                           </div>
                         ))}
