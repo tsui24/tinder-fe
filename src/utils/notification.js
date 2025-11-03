@@ -173,6 +173,59 @@ const playNotificationSound = (type) => {
   }
 };
 
+// Simple notification methods for WebSocket
+const showMatch = (message) => {
+  toast.success(message, {
+    position: "top-right",
+    autoClose: 6000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    className: "match-toast",
+    style: {
+      background: "linear-gradient(135deg, #ff4458 0%, #ff6b7a 100%)",
+      color: "white",
+      fontWeight: "600",
+      borderRadius: "12px",
+      boxShadow: "0 8px 25px rgba(255, 68, 88, 0.3)",
+    },
+  });
+  playNotificationSound("match");
+};
+
+const showLike = (message) => {
+  toast.info(message, {
+    position: "top-right",
+    autoClose: 4000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    className: "like-toast",
+    style: {
+      background: "linear-gradient(135deg, #fff 0%, #fef7f7 100%)",
+      color: "#333",
+      fontWeight: "500",
+      borderLeft: "4px solid #ff4458",
+      borderRadius: "8px",
+      boxShadow: "0 4px 15px rgba(255, 68, 88, 0.15)",
+    },
+  });
+  playNotificationSound("like");
+};
+
+const showInfo = (message) => {
+  toast.info(message, {
+    position: "top-right",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+  });
+};
+
 export default {
   success: showSuccessNotification,
   error: showErrorNotification,
@@ -180,4 +233,7 @@ export default {
   info: showInfoNotification,
   match: showMatchNotification,
   like: showLikeNotification,
+  showMatch,
+  showLike,
+  showInfo,
 };

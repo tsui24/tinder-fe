@@ -10,6 +10,13 @@ const matchUserService = {
   updateSettingUser: (settingData) =>
     apiClient.patch(`${BASE_URL}/update-setting-user`, settingData),
   getUsersWhoLikedMe: () => apiClient.get(`${BASE_URL}/get-user-likes`),
+  getMatches: () => apiClient.get(`/matches`),
+  getMessages: (matchId) => {
+    console.log("🌐🌐🌐 API SERVICE: GET MESSAGES");
+    console.log("📡 URL: GET /messages/" + matchId);
+    console.log("📋 Params: matchId:", matchId);
+    return apiClient.get(`/messages/${matchId}`);
+  },
   likeUser: (userToId) => {
     console.log("🌐🌐🌐 API SERVICE: LIKE USER");
     console.log("📡 URL: POST /like");
