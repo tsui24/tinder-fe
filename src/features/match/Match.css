@@ -521,6 +521,51 @@
   opacity: 0.8;
 }
 
+/* No Users Overlay Styles - positioned to not block taskbar */
+
+.no-users-overlay {
+  position: absolute;
+  top: 0;
+  left: 80px;
+  /* Start after taskbar width */
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  z-index: 500;
+  /* Lower than taskbar to ensure taskbar remains visible */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.no-users-content {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease-out;
+}
+
+.no-users-content h2 {
+  margin: 0 0 16px 0;
+  font-size: 24px;
+  background: linear-gradient(135deg, #ff4458 0%, #ff6b7a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.no-users-content p {
+  margin: 0 0 8px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
 /* Empty Card */
 
 .empty-card {
@@ -1809,7 +1854,8 @@
   background: white;
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
   position: relative;
-  z-index: 10;
+  z-index: 1000;
+  /* Increased to be above no-users-overlay */
 }
 
 .task-bar-items {
@@ -1866,6 +1912,99 @@
   fill: white;
 }
 
+/* Message notification effects - Messenger style */
+
+.task-item.has-unread-messages {
+  background: rgba(255, 107, 122, 0.1);
+}
+
+.task-item.new-message-pulse {
+  animation: messagePulse 2s infinite;
+}
+
+.message-ring-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70px;
+  height: 70px;
+  border: 2px solid #ff4458;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: messageRing 2s infinite;
+  pointer-events: none;
+}
+
+.message-icon-bounce {
+  animation: iconBounce 0.6s ease-in-out;
+}
+
+.badge-bounce {
+  animation: badgeBounce 0.8s ease-in-out;
+}
+
+/* Keyframe animations for message effects */
+
+@keyframes messagePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 68, 88, 0.7);
+    background: rgba(255, 107, 122, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 68, 88, 0);
+    background: rgba(255, 107, 122, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 68, 88, 0);
+    background: rgba(255, 107, 122, 0.1);
+  }
+}
+
+@keyframes messageRing {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0;
+  }
+}
+
+@keyframes iconBounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes badgeBounce {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.3);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .card-stack {
   flex: 1;
   display: flex;
@@ -1882,8 +2021,10 @@
 }
 
 .main-card.detail-mode {
-  width: 480px;
-  height: 90vh;
+  width: 420px;
+  max-width: 90vw;
+  height: 85vh;
+  max-height: 800px;
   z-index: 1001;
   position: fixed;
   top: 50%;
@@ -2404,6 +2545,22 @@
 .match-item.selected {
   background-color: #fff1f2;
   border-right: 3px solid #ff4458;
+}
+
+/* Match item with unread messages */
+
+.match-item.has-unread {
+  background-color: #f0f9ff;
+}
+
+.match-item.has-unread .match-name {
+  font-weight: 700;
+  color: #1890ff;
+}
+
+.match-item.has-unread .last-message {
+  font-weight: 600;
+  color: #333;
 }
 
 .match-name {

@@ -73,8 +73,11 @@ export const showInfoNotification = (message, description = "") => {
  * @param {object} data - Match notification data {userFromId, userFromUsername, userToId, userToUsername, type}
  */
 export const showMatchNotification = (data) => {
-  const message = `🎉 It's a Match! You and ${data.userFromUsername} liked each other!`;
+  const message = `It's a Match!`;
+  const toastId = `match-${data.userFromId}-${Date.now()}`; // Unique ID
+
   toast.success(message, {
+    toastId: toastId, // ✅ Prevent duplicate toasts
     position: "top-right",
     autoClose: 6000,
     hideProgressBar: false,
@@ -104,8 +107,11 @@ export const showMatchNotification = (data) => {
  * @param {object} data - Like notification data {userFromId, userFromUsername, type}
  */
 export const showLikeNotification = (data) => {
-  const message = `💖 ${data.userFromUsername} liked your profile!`;
+  const message = `💖 ${data.fromUsername} liked your profile!`;
+  const toastId = `like-${data.userFromId}-${Date.now()}`; // Unique ID
+
   toast.info(message, {
+    toastId: toastId, // ✅ Prevent duplicate toasts
     position: "top-right",
     autoClose: 4000,
     hideProgressBar: false,
