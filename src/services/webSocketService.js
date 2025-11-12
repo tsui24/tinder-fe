@@ -1,6 +1,6 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-
+import notification from "../utils/notification";
 class WebSocketService {
   constructor() {
     this.stompClient = null;
@@ -224,12 +224,32 @@ class WebSocketService {
       return;
     }
 
-    // Subscribe to MATCH và LIKE notifications - match với backend logic mới
+    // Subscribe to MATCH, LIKE, và CHAT notifications - match với backend logic mới
     const matchDestination = `/topic/match/${this.currentUserId}`;
     const likeDestination = `/topic/like/${this.currentUserId}`;
+    const chatDestination = `/topic/chat/${this.currentUserId}`;
+
+    // ✅ KIỂM TRA NẾU ĐÃ SUBSCRIBE RỒI THÌ KHÔNG SUBSCRIBE NỮA
+    if (this.subscriptions.has(matchDestination)) {
+      console.log(
+        "⚠️ ⚠️ ⚠️ ALREADY SUBSCRIBED! BLOCKED DUPLICATE SUBSCRIPTION!"
+      );
+      console.log(
+        "📊 Current subscriptions:",
+        Array.from(this.subscriptions.keys())
+      );
+      console.log(
+        "📍 Called from:",
+        new Error().stack.split("\n").slice(1, 4).join("\n")
+      );
+      return;
+    }
+
+    console.log("✅✅✅ CREATING NEW SUBSCRIPTIONS (FIRST TIME)");
     console.log("📡 DEBUG - NEW Subscription Info:", {
       matchDestination: matchDestination,
       likeDestination: likeDestination,
+      chatDestination: chatDestination,
       userId: this.currentUserId,
       stompConnected: this.stompClient?.connected,
       hasCallback: !!this.notificationCallback,
@@ -240,18 +260,22 @@ class WebSocketService {
       const matchSubscription = this.stompClient.subscribe(
         matchDestination,
         (message) => {
-          console.log("🎉 MATCH message received from backend:", {
-            headers: message.headers,
-            body: message.body,
+          console.log("🎉🎉🎉 MATCH MESSAGE RECEIVED:", {
             destination: message.headers?.destination,
+            subscriptionId: matchSubscription?.id,
+            timestamp: new Date().toISOString(),
           });
+          console.log("📍 Message body:", message.body);
 
           try {
-            const notification = JSON.parse(message.body);
-            console.log("🔔🔔🔔 MATCH NOTIFICATION PARSED:", notification);
+            const notificationData = JSON.parse(message.body);
+            console.log("🔔🔔🔔 MATCH NOTIFICATION PARSED:", notificationData);
 
             // Thêm type để frontend biết đây là MATCH
-            notification.type = "MATCH";
+            notificationData.type = "MATCH";
+
+            // KHÔNG hiển thị notification ở đây - để callback xử lý
+            // notification.match(notificationData); // ❌ Bỏ dòng này
 
             // Kiểm tra callback vẫn valid trước khi gọi
             if (
@@ -260,7 +284,11 @@ class WebSocketService {
             ) {
               try {
                 console.log("🔄 Calling MATCH notification callback...");
-                this.notificationCallback(notification);
+                console.log(
+                  "📍 MATCH CALLBACK TRACE:",
+                  new Error().stack.split("\n")[1]
+                );
+                this.notificationCallback(notificationData);
                 console.log("✅ MATCH Callback executed successfully");
               } catch (callbackError) {
                 console.error("❌ Error in MATCH callback:", callbackError);
@@ -279,18 +307,22 @@ class WebSocketService {
       const likeSubscription = this.stompClient.subscribe(
         likeDestination,
         (message) => {
-          console.log("💖 LIKE message received from backend:", {
-            headers: message.headers,
-            body: message.body,
+          console.log("💖💖💖 LIKE MESSAGE RECEIVED:", {
             destination: message.headers?.destination,
+            subscriptionId: likeSubscription?.id,
+            timestamp: new Date().toISOString(),
           });
+          console.log("📍 Message body:", message.body);
 
           try {
-            const notification = JSON.parse(message.body);
-            console.log("🔔🔔🔔 LIKE NOTIFICATION PARSED:", notification);
+            const notificationData = JSON.parse(message.body);
+            console.log("🔔🔔🔔 LIKE NOTIFICATION PARSED:", notificationData);
 
             // Thêm type để frontend biết đây là LIKE
-            notification.type = "LIKE";
+            notificationData.type = "LIKE";
+
+            // KHÔNG hiển thị notification ở đây - để callback xử lý
+            // notification.like(notificationData); // ❌ Bỏ dòng này
 
             // Kiểm tra callback vẫn valid trước khi gọi
             if (
@@ -299,7 +331,7 @@ class WebSocketService {
             ) {
               try {
                 console.log("🔄 Calling LIKE notification callback...");
-                this.notificationCallback(notification);
+                this.notificationCallback(notificationData);
                 console.log("✅ LIKE Callback executed successfully");
               } catch (callbackError) {
                 console.error("❌ Error in LIKE callback:", callbackError);
@@ -314,6 +346,45 @@ class WebSocketService {
         }
       );
 
+      // Subscribe to CHAT notifications (/topic/chat/{userId})
+      const chatSubscription = this.stompClient.subscribe(
+        chatDestination,
+        (message) => {
+          console.log("💬 CHAT message received from backend:", {
+            headers: message.headers,
+            body: message.body,
+            destination: message.headers?.destination,
+          });
+
+          try {
+            const notification = JSON.parse(message.body);
+            console.log("🔔🔔🔔 CHAT NOTIFICATION PARSED:", notification);
+
+            // Thêm type để frontend biết đây là CHAT
+            notification.type = "CHAT";
+
+            // Kiểm tra callback vẫn valid trước khi gọi
+            if (
+              this.notificationCallback &&
+              typeof this.notificationCallback === "function"
+            ) {
+              try {
+                console.log("🔄 Calling CHAT notification callback...");
+                this.notificationCallback(notification);
+                console.log("✅ CHAT Callback executed successfully");
+              } catch (callbackError) {
+                console.error("❌ Error in CHAT callback:", callbackError);
+              }
+            } else {
+              console.warn("⚠️ No valid CHAT callback available");
+            }
+          } catch (parseError) {
+            console.error("❌ Error parsing CHAT notification:", parseError);
+            console.log("📝 Raw CHAT body:", message.body);
+          }
+        }
+      );
+
       console.log(
         "✅ MATCH Subscription created with ID:",
         matchSubscription?.id
@@ -322,10 +393,23 @@ class WebSocketService {
         "✅ LIKE Subscription created with ID:",
         likeSubscription?.id
       );
+      console.log(
+        "✅ CHAT Subscription created with ID:",
+        chatSubscription?.id
+      );
 
       // Lưu subscriptions để có thể unsubscribe sau
       this.subscriptions.set(matchDestination, matchSubscription);
       this.subscriptions.set(likeDestination, likeSubscription);
+      this.subscriptions.set(chatDestination, chatSubscription);
+
+      console.log("✅✅✅ SUBSCRIPTIONS CREATED SUCCESSFULLY!");
+      console.log("📊 Total subscriptions:", this.subscriptions.size);
+      console.log("📋 Subscription details:", {
+        match: matchSubscription?.id,
+        like: likeSubscription?.id,
+        chat: chatSubscription?.id,
+      });
     } catch (error) {
       console.error("❌ Error subscribing to notifications:", error);
     }
@@ -444,6 +528,11 @@ class WebSocketService {
   updateNotificationCallback(callback) {
     if (this.connected) {
       console.log("🔄 Updating notification callback");
+      console.log(
+        "📊 Current callback:",
+        this.notificationCallback ? "EXISTS" : "NULL"
+      );
+      console.log("📊 New callback:", callback ? "EXISTS" : "NULL");
       this.notificationCallback = callback;
       return true;
     }
@@ -500,6 +589,10 @@ class WebSocketService {
         "Expected LIKE destination:",
         `/topic/like/${this.currentUserId}`
       );
+      console.log(
+        "Expected CHAT destination:",
+        `/topic/chat/${this.currentUserId}`
+      );
     }
 
     // Check localStorage
@@ -546,10 +639,12 @@ class WebSocketService {
     if (this.currentUserId) {
       const matchDest = `/topic/match/${this.currentUserId}`;
       const likeDest = `/topic/like/${this.currentUserId}`;
+      const chatDest = `/topic/chat/${this.currentUserId}`;
 
       console.log("🧪 Expected destinations:");
       console.log("  MATCH:", matchDest);
       console.log("  LIKE:", likeDest);
+      console.log("  CHAT:", chatDest);
 
       // Check if subscribed
       console.log("🧪 Current subscriptions:");

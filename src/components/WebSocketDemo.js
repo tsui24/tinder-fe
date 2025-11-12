@@ -1,7 +1,7 @@
 // Test component để demo WebSocket notifications
 import React from "react";
 import { Button, Space, Typography, Card } from "antd";
-import notification from "../utils/notification";
+// import notification from "../utils/notification"; // Disabled per user request
 
 const { Title, Text } = Typography;
 
@@ -15,10 +15,11 @@ const WebSocketDemo = () => {
       type: "MATCH",
     };
 
-    // Simulate WebSocket notification received
-    notification.showMatch(
-      `It's a Match! 🎉 You and ${mockMatchData.userFromUsername} liked each other!`
+    // Simulate WebSocket notification received - disabled per user request
+    console.log(
+      `🎉 MATCH: You and ${mockMatchData.userFromUsername} liked each other!`
     );
+    // notification.showMatch(...) - disabled
   };
 
   const testLike = () => {
@@ -28,12 +29,14 @@ const WebSocketDemo = () => {
       type: "LIKE",
     };
 
-    // Simulate WebSocket notification received
-    notification.showLike(`${mockLikeData.userFromUsername} liked you! 💖`);
+    // Simulate WebSocket notification received - disabled per user request
+    console.log(`💖 LIKE: ${mockLikeData.userFromUsername} liked you!`);
+    // notification.showLike(...) - disabled
   };
 
   const testInfo = () => {
-    notification.showInfo("This is a test info notification from WebSocket");
+    console.log("📢 INFO: Test info notification from WebSocket");
+    // notification.showInfo(...) - disabled per user request
   };
 
   return (

@@ -31,12 +31,27 @@ import {
 import TinderCard from "./TinderCard";
 import { useNavigate } from "react-router-dom";
 import matchUserService from "../../api/userService/matchUser";
-import notification from "../../utils/notification";
+import notification from "../../utils/notification"; // Re-enabled for notifications
 import { getCurrentUserId } from "../../utils/auth";
+import webSocketService from "../../services/webSocketService";
 import "./Match.css";
 
 const Match = () => {
   const navigate = useNavigate();
+
+  // Handle logout: clear localStorage and redirect to landing page
+  const handleLogout = () => {
+    try {
+      console.log("🔒 Logging out: clearing localStorage and redirecting");
+      localStorage.clear();
+    } catch (err) {
+      console.warn("Error clearing localStorage:", err);
+    }
+    // Navigate to landing page (root)
+    navigate("/");
+    // Optionally reload to ensure app state is reset
+    // window.location.reload();
+  };
 
   // State management
   const [users, setUsers] = useState([]);
@@ -56,10 +71,13 @@ const Match = () => {
   // Messages feature states
   const [showMessagesOverlay, setShowMessagesOverlay] = useState(false);
   const [matches, setMatches] = useState([]);
+  const [matchesLoaded, setMatchesLoaded] = useState(false); // ✅ Track xem đã load matches chưa
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [totalUnreadCount, setTotalUnreadCount] = useState(0); // ✅ Tổng số MATCH có tin nhắn chưa đọc (không phải tổng số tin nhắn)
+  const [hasNewMessage, setHasNewMessage] = useState(false); // Để trigger hiệu ứng khi có tin nhắn mới
 
   // Transform API data to match our card format
   const transformUserData = (apiUsers) => {
@@ -127,6 +145,29 @@ const Match = () => {
     }
   };
 
+  // ✅ Load unread match count - gọi API count-match-not-read
+  // Được gọi NGAY KHI VÀO TRANG MATCH (không cần click vào Messages tab)
+  const loadUnreadMatchCount = async () => {
+    try {
+      console.log("🔄 Loading unread match count from API...");
+      const response = await matchUserService.getUnreadMatchCount();
+
+      if (response && response.data && response.data.code === 200) {
+        const unreadCount = response.data.result || 0;
+        console.log("✅ Unread match count loaded:", unreadCount);
+        setTotalUnreadCount(unreadCount); // Hiển thị badge ngay
+
+        if (unreadCount > 0) {
+          setHasNewMessage(true);
+        }
+      } else {
+        console.error("❌ Invalid unread count response:", response);
+      }
+    } catch (error) {
+      console.error("❌ Error loading unread match count:", error);
+    }
+  };
+
   // Load matches function
   const loadMatches = async () => {
     setMessagesLoading(true);
@@ -147,15 +188,20 @@ const Match = () => {
           if (match.lastMessageTime) {
             try {
               const date = new Date(match.lastMessageTime);
-              formattedLastMessageTime = date.toLocaleString('vi-VN', {
-                day: '2-digit',
-                month: '2-digit', 
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false // 24-hour format
+              formattedLastMessageTime = date.toLocaleString("vi-VN", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false, // 24-hour format
               });
-              console.log("🕒 Match time formatted:", match.lastMessageTime, "→", formattedLastMessageTime);
+              console.log(
+                "🕒 Match time formatted:",
+                match.lastMessageTime,
+                "→",
+                formattedLastMessageTime
+              );
             } catch (timeError) {
               console.warn("Error formatting match time:", timeError);
               formattedLastMessageTime = match.lastMessageTime;
@@ -169,28 +215,35 @@ const Match = () => {
             avatar: match.avatarUrl,
             lastMessage: match.lastMessage || "Chưa có tin nhắn",
             lastMessageTime: formattedLastMessageTime,
-            unreadCount: 0, // API không có field này, set default
+            unreadCount: match.numberOfMessDontSend || 0, // ✅ Lấy từ API
+            isRead: match.isRead !== undefined ? match.isRead : true, // ✅ Trạng thái đã đọc
           };
         });
 
         setMatches(transformedMatches);
+        setMatchesLoaded(true); // ✅ Đánh dấu đã load matches
+
+        // ✅ KHÔNG tính lại count ở đây
+        // Count đã được load từ API count-match-not-read khi vào trang
+        // Chỉ update count qua WebSocket hoặc khi click vào match
+
         console.log("🎉 Transformed matches:", transformedMatches);
+        console.log("📊 Current unread count:", totalUnreadCount);
       } else {
         console.error("❌ Invalid API response:", response);
         setMatches([]);
-        notification.showError("Không thể tải danh sách matches");
       }
     } catch (error) {
       console.error("❌ Error loading matches:", error);
       setMatches([]);
 
-      // Hiển thị thông báo lỗi thân thiện
+      // Log lỗi nhưng không hiển thị notification
       if (error.response?.status === 401) {
-        notification.showError("Phiên đăng nhập đã hết hạn");
+        console.error("❌ Session expired");
       } else if (error.response?.status === 404) {
-        notification.showWarning("Chưa có matches nào");
+        console.warn("⚠️ No matches found");
       } else {
-        notification.showError("Lỗi khi tải danh sách matches");
+        console.error("❌ Error loading matches");
       }
     } finally {
       setMessagesLoading(false);
@@ -275,63 +328,154 @@ const Match = () => {
         } else {
           console.error("❌ Unexpected API response:", response.data);
           setMessages([]);
-          notification.showError("Lỗi tải tin nhắn");
         }
       } else {
         console.error("❌ Invalid API response structure:", response);
         setMessages([]);
-        notification.showError("Lỗi tải tin nhắn");
       }
     } catch (error) {
       console.error("❌ Error loading messages:", error);
       setMessages([]);
 
-      // Handle specific error codes
+      // Log error codes nhưng không hiển thị notification
       if (error.response?.status === 404) {
-        notification.showWarning("Match không tồn tại");
+        console.warn("⚠️ Match not found");
       } else if (error.response?.status === 401) {
-        notification.showError("Phiên đăng nhập đã hết hạn");
+        console.error("❌ Session expired");
       } else {
-        notification.showError("Lỗi tải tin nhắn");
+        console.error("❌ Error loading messages");
       }
     }
   };
 
   // Handle match selection
-  const handleMatchSelect = (match) => {
+  const handleMatchSelect = async (match) => {
     setSelectedMatch(match);
     loadMessages(match.id);
+
+    // ✅ Khi click vào match có tin nhắn chưa đọc → count--
+    if (match.unreadCount > 0 || !match.isRead) {
+      // Gọi API để đánh dấu tin nhắn là đã đọc
+      try {
+        console.log("📖 Marking messages as read for match:", match.id);
+        await matchUserService.markMessagesAsRead(match.id);
+        console.log("✅ Messages marked as read successfully");
+      } catch (error) {
+        console.error("❌ Error marking messages as read:", error);
+      }
+
+      // Update UI state
+      setMatches((prev) =>
+        prev.map((m) =>
+          m.id === match.id ? { ...m, unreadCount: 0, isRead: true } : m
+        )
+      );
+
+      // ✅ COUNT-- (Giảm 1 match chưa đọc)
+      console.log("📊 COUNT-- Clicked on unread match, decrementing count");
+      console.log("   Match ID:", match.id);
+      console.log("   Match name:", match.fullName);
+      setTotalUnreadCount((prev) => {
+        const newCount = Math.max(0, prev - 1);
+        console.log("   Count change:", prev, "→", newCount);
+        return newCount;
+      });
+
+      // Tắt hiệu ứng nếu không còn match chưa đọc
+      if (totalUnreadCount <= 1) {
+        setHasNewMessage(false);
+      }
+    }
   };
 
-  // Handle send message
-  const handleSendMessage = () => {
-    if (newMessage.trim() && selectedMatch) {
-      const message = {
+  // Handle send message with real API
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedMatch) {
+      console.warn(
+        "⚠️ Cannot send message: empty message or no selected match"
+      );
+      return;
+    }
+
+    const messageContent = newMessage.trim();
+    const currentUserId = getCurrentUserId();
+
+    try {
+      console.log("📤 Sending message:", {
+        matchId: selectedMatch.id,
+        receiverId: selectedMatch.userId,
+        content: messageContent,
+      });
+
+      // Call API để gửi tin nhắn
+      const response = await matchUserService.sendMessage({
+        matchId: selectedMatch.id,
+        receiverId: selectedMatch.userId,
+        content: messageContent,
+      });
+
+      console.log("✅ Message sent successfully:", response);
+
+      // Format timestamp
+      const formattedTime = new Date().toLocaleString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+
+      // Tạo message object cho UI
+      const sentMessage = {
         id: Date.now(),
-        senderId: "me",
-        message: newMessage.trim(),
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        matchId: selectedMatch.id,
+        senderId: parseInt(currentUserId),
+        senderName: "You",
+        message: messageContent,
+        timestamp: formattedTime,
         isOwn: true,
+        read: false,
+        sentAt: new Date().toISOString(),
       };
-      setMessages((prev) => [...prev, message]);
+
+      // Update messages list
+      setMessages((prev) => [...prev, sentMessage]);
+
+      // Clear input
       setNewMessage("");
 
       // Update last message in matches list
-      setMatches((prev) =>
-        prev.map((match) =>
+      setMatches((prev) => {
+        const updatedMatches = prev.map((match) =>
           match.id === selectedMatch.id
             ? {
                 ...match,
-                lastMessage: newMessage.trim(),
-                lastMessageTime: "now",
-                unreadCount: 0,
+                lastMessage: messageContent,
+                lastMessageTime: formattedTime,
+                unreadCount: 0, // Reset vì đây là tin nhắn của mình
               }
             : match
-        )
-      );
+        );
+
+        // ✅ KHÔNG cần recalculate count khi gửi tin nhắn
+        // Count chỉ thay đổi khi nhận tin nhắn mới từ người khác
+
+        return updatedMatches;
+      });
+
+      console.log("💬 Message updated in UI successfully");
+    } catch (error) {
+      console.error("❌ Error sending message:", error);
+
+      // Log error cases nhưng không hiển thị notification
+      if (error.response?.status === 404) {
+        console.warn("⚠️ Match not found");
+      } else if (error.response?.status === 401) {
+        console.error("❌ Session expired");
+      } else {
+        console.error("❌ Error sending message");
+      }
     }
   };
 
@@ -402,7 +546,152 @@ const Match = () => {
     };
 
     fetchUsers();
+
+    // ✅ Load unread match count ngay khi vào trang
+    loadUnreadMatchCount();
   }, []);
+
+  // Handle incoming chat messages via WebSocket
+  useEffect(() => {
+    const handleChatNotification = (event) => {
+      const notificationData = event.detail;
+      console.log("💬 CHAT notification received:", notificationData);
+
+      if (notificationData.type === "CHAT") {
+        const { senderId, senderName, content, matchId } = notificationData;
+
+        // Format timestamp cho tin nhắn mới
+        const formattedTime = new Date().toLocaleString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+
+        const newChatMessage = {
+          id: Date.now(),
+          matchId: matchId,
+          senderId: senderId,
+          senderName: senderName,
+          message: content,
+          timestamp: formattedTime,
+          isOwn: false, // Tin nhắn từ người khác
+          read: false,
+          sentAt: new Date().toISOString(),
+        };
+
+        // Update messages nếu đang xem chat của match này
+        if (selectedMatch && selectedMatch.id === matchId) {
+          setMessages((prev) => [...prev, newChatMessage]);
+
+          // ✅ Tự động đánh dấu là đã đọc vì đang xem chat
+          matchUserService
+            .markMessagesAsRead(matchId)
+            .then(() => {
+              console.log("📖 Auto-marked new message as read (chat is open)");
+
+              // ✅ Update state matches để sync isRead = true
+              setMatches((prev) =>
+                prev.map((m) =>
+                  m.id === matchId
+                    ? {
+                        ...m,
+                        lastMessage: content,
+                        lastMessageTime: formattedTime,
+                        unreadCount: 0,
+                        isRead: true,
+                      }
+                    : m
+                )
+              );
+            })
+            .catch((error) => {
+              console.error("❌ Error auto-marking as read:", error);
+            });
+        } else {
+          // ✅ Nếu đã load matches list, update chi tiết
+          if (matchesLoaded) {
+            // Tìm match trước để check trạng thái
+            const targetMatch = matches.find((m) => m.id === matchId);
+            const shouldIncrementCount =
+              targetMatch &&
+              targetMatch.isRead &&
+              targetMatch.unreadCount === 0;
+
+            setMatches((prev) => {
+              const updatedMatches = prev.map((match) => {
+                if (match.id === matchId) {
+                  return {
+                    ...match,
+                    lastMessage: content,
+                    lastMessageTime: formattedTime,
+                    unreadCount: (match.unreadCount || 0) + 1,
+                    isRead: false,
+                  };
+                }
+                return match;
+              });
+
+              return updatedMatches;
+            });
+
+            // ✅ Chỉ tăng count nếu match trước đó đã đọc hết
+            // VÀ không phải đang xem match này
+            if (shouldIncrementCount) {
+              console.log("📊 COUNT++ Match was read, incrementing count");
+              console.log("   Match ID:", matchId);
+              console.log("   Target match state:", targetMatch);
+              setTotalUnreadCount((prevCount) => {
+                console.log("   Count change:", prevCount, "→", prevCount + 1);
+                return prevCount + 1;
+              });
+            } else {
+              console.log("📊 NOT incrementing count");
+              console.log(
+                "   Reason: Match already unread or currently viewing"
+              );
+              console.log("   Match ID:", matchId);
+              console.log("   Target match state:", targetMatch);
+              console.log("   shouldIncrementCount:", shouldIncrementCount);
+            }
+          } else {
+            // ✅ Nếu CHƯA load matches (chưa click vào Messages tab)
+            // → KHÔNG tăng count vì count đã bao gồm match này rồi
+            console.log(
+              "📊 NOT incrementing - Matches not loaded, count already includes unread matches"
+            );
+            console.log("   Match ID:", matchId);
+            console.log("   Current count:", totalUnreadCount);
+            console.log("   matchesLoaded:", matchesLoaded);
+          }
+
+          // Trigger hiệu ứng tin nhắn mới trên icon Messages
+          setHasNewMessage(true);
+
+          // Tự động tắt hiệu ứng sau 3 giây
+          setTimeout(() => {
+            setHasNewMessage(false);
+          }, 3000);
+        }
+      }
+    };
+
+    // Lắng nghe custom event từ App.js cho CHAT notification
+    window.addEventListener("chatNotification", handleChatNotification);
+
+    return () => {
+      window.removeEventListener("chatNotification", handleChatNotification);
+    };
+  }, [selectedMatch]);
+
+  // Tự động tắt hiệu ứng khi không còn tin nhắn chưa đọc
+  useEffect(() => {
+    if (totalUnreadCount === 0) {
+      setHasNewMessage(false);
+    }
+  }, [totalUnreadCount]);
 
   // Note: WebSocket is now handled globally in App.js
   // This ensures notifications work on ALL pages, not just Match page
@@ -605,8 +894,7 @@ const Match = () => {
       type: "MATCH",
     };
     console.log("📤 Mock MATCH data:", mockData);
-    console.log("🔄 Calling notification.match()...");
-    notification.match(mockData);
+    console.log("🔄 Test MATCH notification (no popup)...");
     console.log("✅ Test MATCH notification complete!");
   };
 
@@ -619,10 +907,28 @@ const Match = () => {
       type: "LIKE",
     };
     console.log("📤 Mock LIKE data:", mockData);
-    console.log("🔄 Calling notification.like()...");
-    notification.like(mockData);
+    console.log("🔄 Test LIKE notification (no popup)...");
     console.log("✅ Test LIKE notification complete!");
   };
+
+  // Test function cho hiệu ứng tin nhắn mới
+  const testMessageNotification = () => {
+    console.log("🧪💬 TESTING MESSAGE NOTIFICATION EFFECT");
+    setTotalUnreadCount((prev) => prev + 1);
+    setHasNewMessage(true);
+
+    // Tự động tắt sau 3 giây
+    setTimeout(() => {
+      setHasNewMessage(false);
+    }, 3000);
+
+    console.log("✅ Test message effect triggered!");
+  };
+
+  // Expose test function to window for debugging
+  if (typeof window !== "undefined") {
+    window.testMessageEffect = testMessageNotification;
+  }
 
   const showDetailsModal = () => {
     setShowDetail(true);
@@ -674,41 +980,6 @@ const Match = () => {
         </div>
       )}
 
-      {/* No Users Overlay */}
-      {showNoUsersMessage && !loading && (
-        <div className="overlay-backdrop">
-          <div className="overlay-content">
-            <div className="no-users-icon">📍</div>
-            <h2>Hết người trong khoảng cách này!</h2>
-            <p>Trong khoảng cách hiện tại đã hết người phù hợp.</p>
-            <p>Bạn cần điều chỉnh lại khoảng cách để tìm thêm người mới.</p>
-            <div className="overlay-buttons">
-              <Button
-                type="primary"
-                onClick={() => navigate("/settings")}
-                style={{
-                  background:
-                    "linear-gradient(135deg, #ff4458 0%, #ff6b7a 100%)",
-                  border: "none",
-                  marginRight: "12px",
-                }}
-              >
-                Điều chỉnh khoảng cách
-              </Button>
-              <Button
-                type="default"
-                onClick={() => {
-                  setShowNoUsersMessage(false);
-                  window.location.reload();
-                }}
-              >
-                Tải lại
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Backdrop overlay when in detail mode */}
       {showDetail && (
         <div className="detail-backdrop" onClick={() => setShowDetail(false)} />
@@ -735,23 +1006,50 @@ const Match = () => {
             </div>
 
             <div
-              className={`task-item ${showMessagesOverlay ? "active" : ""}`}
+              className={`task-item ${showMessagesOverlay ? "active" : ""} ${
+                hasNewMessage ? "new-message-pulse" : ""
+              } ${totalUnreadCount > 0 ? "has-unread-messages" : ""}`}
               title="Messages"
               onClick={() => {
                 setShowMessagesOverlay(!showMessagesOverlay);
+                setHasNewMessage(false); // Tắt hiệu ứng khi click vào Messages
                 if (!showMessagesOverlay) {
                   loadMatches();
                 }
               }}
+              style={{ position: "relative" }}
             >
+              {/* Ring effect when new message arrives */}
+              {hasNewMessage && <div className="message-ring-effect"></div>}
+
               <svg
                 width="24"
                 height="24"
                 viewBox="0 0 24 24"
-                fill={showMessagesOverlay ? "#ff4458" : "#ccc"}
+                fill={
+                  showMessagesOverlay
+                    ? "#ff4458"
+                    : totalUnreadCount > 0
+                    ? "#ff6b7a"
+                    : "#ccc"
+                }
+                className={hasNewMessage ? "message-icon-bounce" : ""}
               >
                 <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
               </svg>
+
+              {totalUnreadCount > 0 && (
+                <Badge
+                  count={totalUnreadCount}
+                  size="small"
+                  className={hasNewMessage ? "badge-bounce" : ""}
+                  style={{
+                    position: "absolute",
+                    top: "-5px",
+                    right: "-5px",
+                  }}
+                />
+              )}
             </div>
 
             <div
@@ -792,6 +1090,10 @@ const Match = () => {
               onClick={() => navigate("/settings")}
             >
               <SettingOutlined style={{ fontSize: "24px", color: "#ccc" }} />
+            </div>
+
+            <div className="task-item" title="Logout" onClick={handleLogout}>
+              <CloseOutlined style={{ fontSize: "20px", color: "#ccc" }} />
             </div>
 
             <div
@@ -853,16 +1155,6 @@ const Match = () => {
                   <p>Sẵn sàng khám phá những người mới</p>
                 </div>
               </div>
-            )}
-
-            {/* Close detail button when in detail mode */}
-            {showDetail && (
-              <Button
-                type="text"
-                icon={<LeftOutlined />}
-                onClick={() => setShowDetail(false)}
-                className="close-detail-btn"
-              />
             )}
           </div>
         </div>
@@ -1002,6 +1294,41 @@ const Match = () => {
         </div>
       )}
 
+      {/* No Users Overlay - positioned inside match-content to not block taskbar */}
+      {showNoUsersMessage && !loading && (
+        <div className="no-users-overlay">
+          <div className="no-users-content">
+            <div className="no-users-icon">📍</div>
+            <h2>Hết người trong khoảng cách này!</h2>
+            <p>Trong khoảng cách hiện tại đã hết người phù hợp.</p>
+            <p>Bạn cần điều chỉnh lại khoảng cách để tìm thêm người mới.</p>
+            <div className="overlay-buttons">
+              <Button
+                type="primary"
+                onClick={() => navigate("/settings")}
+                style={{
+                  background:
+                    "linear-gradient(135deg, #ff4458 0%, #ff6b7a 100%)",
+                  border: "none",
+                  marginRight: "12px",
+                }}
+              >
+                Điều chỉnh khoảng cách
+              </Button>
+              <Button
+                type="default"
+                onClick={() => {
+                  setShowNoUsersMessage(false);
+                  window.location.reload();
+                }}
+              >
+                Tải lại
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Messages Overlay */}
       {showMessagesOverlay && (
         <div className="messages-overlay">
@@ -1052,7 +1379,7 @@ const Match = () => {
                           <List.Item
                             className={`match-item ${
                               selectedMatch?.id === match.id ? "selected" : ""
-                            }`}
+                            } ${match.unreadCount > 0 ? "has-unread" : ""}`}
                             onClick={() => handleMatchSelect(match)}
                           >
                             <List.Item.Meta

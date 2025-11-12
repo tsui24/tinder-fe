@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useEffect, useState, useCallback, useRef } from "react";
 import webSocketService from "./services/webSocketService";
 import { getCurrentUserId, isAuthenticated, isLoginPage } from "./utils/auth";
-import notification from "./utils/notification";
+import notification from "./utils/notification"; // Re-enabled for notifications
 
 // Debug helper - expose to global để có thể test từ console
 if (process.env.NODE_ENV === "development") {
@@ -23,15 +23,13 @@ if (process.env.NODE_ENV === "development") {
         message: "Test notification",
       };
       console.log("🧪 Testing notification:", testData);
-      // Directly call notification để test
+      // Test notifications - disabled per user request
       if (type === "MATCH") {
-        notification.showMatch(
-          `Test Match notification from ${testData.userFromUsername}`
-        );
+        console.log("🧪 Test Match notification:", testData.userFromUsername);
+        // notification.showMatch(...) - disabled
       } else {
-        notification.showLike(
-          `Test Like notification from ${testData.userFromUsername}`
-        );
+        console.log("🧪 Test Like notification:", testData.userFromUsername);
+        // notification.showLike(...) - disabled
       }
     },
     reconnect: () => webSocketService.forceReconnect(),
@@ -62,11 +60,67 @@ function AppContent() {
   const [wsConnected, setWsConnected] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
   const initializingRef = useRef(false);
+  const handleNotificationRef = useRef(null); // ✅ Store callback in ref
+  const processedNotificationsRef = useRef(new Set()); // ✅ Track processed notifications
 
   // Handle WebSocket notifications - useCallback để tránh re-render
+  const notificationCountRef = useRef({});
+
   const handleNotification = useCallback((notificationData) => {
     try {
-      console.log("🔔 Global notification received:", notificationData);
+      // Tạo unique ID dựa trên nội dung thực của notification (KHÔNG dùng timestamp)
+      const notifKey = `${notificationData.type}_${
+        notificationData.userFromId || notificationData.senderId
+      }_${notificationData.userToId || ""}`;
+
+      // Kiểm tra xem notification này đã được xử lý chưa
+      if (processedNotificationsRef.current.has(notifKey)) {
+        console.warn(
+          "🚫🚫🚫 DUPLICATE NOTIFICATION BLOCKED (ALREADY PROCESSED):",
+          notifKey
+        );
+        return;
+      }
+
+      // Đánh dấu đã xử lý
+      processedNotificationsRef.current.add(notifKey);
+
+      // Tự động xóa sau 5 giây để cho phép notification tương tự sau đó
+      setTimeout(() => {
+        processedNotificationsRef.current.delete(notifKey);
+      }, 5000);
+
+      // Tạo unique ID cho notification để track
+      const notifId = `${notificationData.type}_${
+        notificationData.userFromId || notificationData.senderId
+      }_${Date.now()}`;
+
+      // Kiểm tra xem notification này đã được xử lý chưa (trong vòng 1 giây)
+      const now = Date.now();
+      if (
+        notificationCountRef.current[notifId] &&
+        now - notificationCountRef.current[notifId] < 1000
+      ) {
+        console.warn("🚫🚫🚫 DUPLICATE NOTIFICATION BLOCKED:", notifId);
+        console.warn(
+          "📍 Time difference:",
+          now - notificationCountRef.current[notifId],
+          "ms"
+        );
+        return;
+      }
+
+      notificationCountRef.current[notifId] = now;
+      console.log("=".repeat(80));
+      console.log("🔔🔔🔔 APP.JS - NOTIFICATION CALLBACK TRIGGERED!");
+      console.log("=".repeat(80));
+      console.log("📨 Notification data:", notificationData);
+      console.log("🆔 Notification ID:", notifId);
+      console.log("⏰ Timestamp:", new Date().toISOString());
+      console.log(
+        "📍 Stack trace:",
+        new Error().stack.split("\n").slice(1, 3).join("\n")
+      );
 
       if (!notificationData || typeof notificationData !== "object") {
         console.warn("⚠️ Invalid notification data:", notificationData);
@@ -75,26 +129,39 @@ function AppContent() {
 
       switch (notificationData.type) {
         case "MATCH":
-          notification.showMatch(
-            `It's a Match! 🎉 You and ${
-              notificationData.userFromUsername || "someone"
-            } liked each other!`
+          console.log(
+            "🎉 Displaying MATCH notification for:",
+            notificationData.userFromUsername
           );
+          notification.match(notificationData); // Hiển thị popup
           break;
         case "LIKE":
-          notification.showLike(
-            `${notificationData.userFromUsername || "Someone"} liked you! 💖`
+          console.log(
+            "💖 Displaying LIKE notification for:",
+            notificationData.userFromUsername
+          );
+          notification.like(notificationData); // Hiển thị popup
+          break;
+        case "CHAT":
+          console.log("💬 CHAT notification:", notificationData);
+          // Dispatch custom event để Match.js component có thể lắng nghe
+          window.dispatchEvent(
+            new CustomEvent("chatNotification", { detail: notificationData })
           );
           break;
         default:
-          notification.showInfo(
-            `New notification: ${JSON.stringify(notificationData)}`
-          );
+          console.log("📢 New notification:", notificationData);
+          notification.showInfo("New notification received");
       }
     } catch (error) {
       console.error("❌ Error handling notification:", error);
     }
   }, []);
+
+  // ✅ Update ref mỗi khi handleNotification thay đổi
+  useEffect(() => {
+    handleNotificationRef.current = handleNotification;
+  }, [handleNotification]);
 
   // Initialize WebSocket connection - tối ưu hóa logic
   const initWebSocket = useCallback(async () => {
@@ -118,11 +185,10 @@ function AppContent() {
     // Kiểm tra xem đã kết nối cho user này chưa
     const wsState = webSocketService.getConnectionState();
     if (wsState.connected && wsState.userId === userId) {
-      console.log("✅ WebSocket đã kết nối cho user này");
+      console.log("✅ WebSocket đã kết nối cho user này, skip reconnect");
       setWsConnected(true);
       setCurrentUserId(userId);
-      // Chỉ update callback
-      webSocketService.updateNotificationCallback(handleNotification);
+      // KHÔNG update callback nữa - để tránh re-subscribe
       return;
     }
 
@@ -137,15 +203,15 @@ function AppContent() {
       initializingRef.current = true;
       console.log("🚀 Khởi tạo WebSocket connection cho user:", userId);
 
-      // Tạo stable callback wrapper để tránh lỗi "callback no longer runnable"
+      // ✅ Sử dụng wrapper để lấy callback mới nhất từ ref
       const stableCallback = (data) => {
-        // Check component vẫn mounted và callback vẫn valid
         if (
           initializingRef.current !== null &&
-          typeof handleNotification === "function"
+          handleNotificationRef.current &&
+          typeof handleNotificationRef.current === "function"
         ) {
           try {
-            handleNotification(data);
+            handleNotificationRef.current(data);
           } catch (error) {
             console.error("❌ Error in notification callback:", error);
           }
@@ -173,10 +239,11 @@ function AppContent() {
         initializingRef.current = false;
       }
     }
-  }, [handleNotification]);
+  }, []); // ✅ EMPTY DEPS - initWebSocket không phụ thuộc vào gì nữa!
 
-  // Main WebSocket effect
+  // Main WebSocket effect - CHỈ RUN 1 LẦN KHI APP MOUNT
   useEffect(() => {
+    console.log("🎯 App mounted - initializing WebSocket...");
     initWebSocket();
 
     // Listen for route/authentication changes
@@ -184,16 +251,18 @@ function AppContent() {
       const currentPath = window.location.pathname;
       const shouldConnect = isAuthenticated() && !isLoginPage(currentPath);
       const userId = getCurrentUserId();
+      const wsState = webSocketService.getConnectionState();
 
       if (!shouldConnect || !userId) {
-        if (wsConnected) {
+        if (wsState.connected) {
           console.log("🔌 Disconnecting WebSocket - không còn authenticated");
           webSocketService.disconnect();
           setWsConnected(false);
           setCurrentUserId(null);
         }
-      } else if (userId !== currentUserId) {
+      } else if (userId !== wsState.userId && !wsState.connecting) {
         // User changed, reconnect
+        console.log("👤 User changed, reconnecting WebSocket...");
         initWebSocket();
       }
     };
@@ -206,7 +275,7 @@ function AppContent() {
       window.removeEventListener("storage", handleAuthChange);
       window.removeEventListener("popstate", handleAuthChange);
     };
-  }, [initWebSocket, wsConnected, currentUserId]);
+  }, []); // ✅ EMPTY DEPENDENCIES - chỉ run 1 lần!
 
   // Disconnect on app unmount
   useEffect(() => {

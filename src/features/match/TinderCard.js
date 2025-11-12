@@ -248,85 +248,130 @@ const TinderCard = ({
         </div>
       </div>
 
-      {/* Scrollable content for detail view */}
+      {/* Scrollable content for detail view - giống y hệt modal user-detail */}
       {scrollMode && (
         <div className="scroll-content">
-          <div className="scroll-section">
-            <h3>About {user.name}</h3>
-            <p>{user.bio}</p>
+          {/* Main Image - có thể scroll */}
+          <div className="scroll-image-container">
+            <img
+              src={user.images[0]}
+              alt={user.name}
+              className="scroll-main-image"
+            />
           </div>
 
-          <div className="scroll-section">
-            <h4>
-              <ManOutlined /> Basic Info
-            </h4>
-            <div className="info-grid">
-              <div className="info-item">
-                <span className="info-label">Age</span>
-                <span className="info-value">{user.age}</span>
+          {/* User Info - giống user-detail-info */}
+          <div className="user-detail-info">
+            <div className="user-basic-info">
+              <h3 className="user-name">
+                {user.name}
+                <span className="user-age">, {user.age}</span>
+              </h3>
+
+              <div className="user-location">
+                <span>📍 {user.distance}</span>
               </div>
-              <div className="info-item">
-                <span className="info-label">Distance</span>
-                <span className="info-value">{user.distance}</span>
+            </div>
+
+            {/* Bio */}
+            {user.bio && (
+              <div className="user-bio">
+                <p>{user.bio}</p>
               </div>
-            </div>
-          </div>
+            )}
 
-          <div className="scroll-section">
-            <h4>
-              <BookOutlined /> Work & Education
-            </h4>
-            <div className="info-item">
-              <span className="info-label">Job</span>
-              <span className="info-value">{user.company}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">School</span>
-              <span className="info-value">{user.school}</span>
-            </div>
-          </div>
-
-          <div className="scroll-section">
-            <h4>
-              <BulbOutlined /> Interests
-            </h4>
-            <div className="interests-grid">
-              {user.interests.map((interest, index) => (
-                <span key={index} className="interest-bubble">
-                  {interest}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="scroll-section">
-            <h4>
-              <UserOutlined /> More Photos
-            </h4>
-            <div className="photo-grid">
-              {user.images.map((image, index) => (
-                <div key={index} className="photo-item">
-                  <img src={image} alt={`${user.name} ${index + 1}`} />
+            {/* Additional Info */}
+            <div className="user-additional-info">
+              {user.company && (
+                <div className="info-item">
+                  <span>
+                    <strong>🏢 Company: </strong>
+                  </span>
+                  <span>{user.company}</span>
                 </div>
-              ))}
-            </div>
-          </div>
+              )}
 
-          <div className="scroll-section">
-            <div className="verification-badge">
-              {user.verified && (
-                <span className="verified-text">✓ Photo Verified</span>
+              {user.school && (
+                <div className="info-item">
+                  <span>
+                    <strong>🎓 School: </strong>
+                  </span>
+                  <span>{user.school}</span>
+                </div>
+              )}
+
+              {user.tall && (
+                <div className="info-item">
+                  <span>
+                    <strong>📏 Height: </strong>
+                  </span>
+                  <span>{user.tall} cm</span>
+                </div>
+              )}
+
+              {user.location && (
+                <div className="info-item">
+                  <span>
+                    <strong>🏠 Location: </strong>
+                  </span>
+                  <span>{user.location}</span>
+                </div>
               )}
             </div>
+
+            {/* Interests */}
+            {user.interests && user.interests.length > 0 && (
+              <div className="user-interests">
+                <span>
+                  <strong>💫 Interests:</strong>
+                </span>
+                <div className="interests-tags">
+                  {user.interests.map((interest, index) => (
+                    <span key={index} className="interest-tag">
+                      {interest}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Photo Gallery */}
+            {user.images && user.images.length > 0 && (
+              <div className="user-photos">
+                <span>
+                  <strong>📷 All Photos ({user.images.length}):</strong>
+                </span>
+                <div className="photo-grid">
+                  {user.images.map((image, index) => (
+                    <div key={index} className="photo-item">
+                      <img src={image} alt={`${user.name} ${index + 1}`} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Debug: Show if no images */}
+            {(!user.images || user.images.length === 0) && (
+              <div
+                style={{
+                  padding: "12px",
+                  background: "#f0f0f0",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  color: "#666",
+                }}
+              >
+                ℹ️ No photos available
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Action buttons - Always at bottom */}
       <div className="tinder-action-buttons">
-        <button className="action-button rewind-button">
-          <UndoOutlined />
-        </button>
+        {/* rewind button removed to match like-card layout */}
 
         <button
           className="action-button pass-button"

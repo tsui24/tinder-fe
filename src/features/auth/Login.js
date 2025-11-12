@@ -15,22 +15,89 @@ function Login() {
   const navigate = useNavigate();
   const [isCheck, setIsCheck] = useState(false);
 
+  // Function to decode JWT token and extract role
+  const decodeToken = (token) => {
+    try {
+      // JWT có format: header.payload.signature
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join("")
+      );
+      const decoded = JSON.parse(jsonPayload);
+      console.log("🔓 Decoded token:", decoded);
+      return decoded;
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
+    }
+  };
+
   const onFinish = (values) => {
     console.log("Login form submitted:", values);
     authService
       .login(values)
       .then(async (response) => {
         if (response?.data?.code === 200) {
-          localStorage.setItem("token", response?.data?.result.token);
+          const token = response?.data?.result?.token;
+          localStorage.setItem("token", token);
+
+          // Decode token để lấy role
+          const decodedToken = decodeToken(token);
+
+          // Xử lý các trường hợp khác nhau của role trong token
+          let role = null;
+          if (decodedToken) {
+            // Trường hợp 1: role trực tiếp
+            if (decodedToken.role) {
+              role = decodedToken.role;
+            }
+            // Trường hợp 2: authorities là array
+            else if (
+              Array.isArray(decodedToken.authorities) &&
+              decodedToken.authorities.length > 0
+            ) {
+              role = decodedToken.authorities[0];
+            }
+            // Trường hợp 3: authorities là string
+            else if (typeof decodedToken.authorities === "string") {
+              role = decodedToken.authorities;
+            }
+            // Trường hợp 4: scope
+            else if (decodedToken.scope) {
+              role = decodedToken.scope;
+            }
+          }
+
+          console.log("🔑 User role from token:", role);
+
+          // Lưu role vào localStorage để sử dụng sau này
+          if (role) {
+            localStorage.setItem("userRole", role);
+          }
+
           showSuccessNotification(
             "Login Successful",
             "Welcome back! Redirecting..."
           );
-          const checkResponse = await checkUser();
-          if (checkResponse) {
-            navigate("/match");
+
+          // Kiểm tra role và chuyển hướng
+          if (role === "ADMIN" || role === "ROLE_ADMIN") {
+            console.log("🔑 Admin user detected, redirecting to /admin");
+            navigate("/admin");
           } else {
-            navigate("/register-info");
+            // User thường - kiểm tra đã hoàn thiện profile chưa
+            const checkResponse = await checkUser();
+            if (checkResponse) {
+              navigate("/match");
+            } else {
+              navigate("/register-info");
+            }
           }
         } else {
           showErrorNotification(
@@ -134,7 +201,10 @@ function Login() {
             </Form.Item>
 
             <Form.Item className="forgot-password-item">
-              <Link href="#" className="forgot-password-link">
+              <Link
+                onClick={() => navigate("/forgot-password")}
+                className="forgot-password-link"
+              >
                 Forgot password?
               </Link>
             </Form.Item>
